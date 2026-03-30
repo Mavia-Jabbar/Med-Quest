@@ -1,86 +1,70 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { sendMessageToAI } from '@/services/tutorService';
-import { BrainCircuit, Send, Trash2, Dna, FlaskConical, Zap, BookOpen, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Send, BrainCircuit, Dna, FlaskConical, Zap, RotateCcw, User } from 'lucide-react';
+import { createChatSession, sendMessage } from '@/services/tutorService';
+import { useFirebase } from '@/Context/firebase';
 
 const SUBJECTS = [
-  { label: 'Biology', icon: Dna, color: 'emerald' },
-  { label: 'Chemistry', icon: FlaskConical, color: 'blue' },
-  { label: 'Physics', icon: Zap, color: 'fuchsia' },
-  { label: 'English', icon: BookOpen, color: 'amber' },
+  { key: 'Biology',   label: 'Biology',   icon: Dna,          color: 'emerald', prompt: 'Biology (Cell Biology, Genetics, Human Physiology, Ecology)' },
+  { key: 'Chemistry', label: 'Chemistry', icon: FlaskConical, color: 'blue',    prompt: 'Chemistry (Organic, Inorganic, Physical, Thermodynamics)' },
+  { key: 'Physics',   label: 'Physics',   icon: Zap,          color: 'fuchsia', prompt: 'Physics (Mechanics, Electromagnetism, Optics, Modern Physics)' },
 ];
 
-const QUICK_PROMPTS = [
-  "Explain the sliding filament theory",
-  "What is Gibbs Free Energy?",
-  "Derive equations of motion",
-  "Difference between mitosis and meiosis",
-];
+const SUBJECT_STYLES = {
+  emerald: { pill: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/40', active: 'bg-emerald-500 text-white border-transparent shadow-lg shadow-emerald-500/30', dot: 'bg-emerald-500' },
+  blue:    { pill: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/40', active: 'bg-blue-500 text-white border-transparent shadow-lg shadow-blue-500/30', dot: 'bg-blue-500' },
+  fuchsia: { pill: 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200 dark:bg-fuchsia-900/30 dark:text-fuchsia-400 dark:border-fuchsia-800/40', active: 'bg-fuchsia-500 text-white border-transparent shadow-lg shadow-fuchsia-500/30', dot: 'bg-fuchsia-500' },
+};
 
-// Simple inline markdown renderer for bold, bullet points
-function renderMarkdown(text) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code class="bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-xs">$1</code>')
-    .replace(/\n\n/g, '<br/><br/>')
-    .replace(/\n/g, '<br/>');
-}
-
-// Typing Indicator Component
-function TypingIndicator() {
-  return (
-    <div className="flex items-end gap-3 animate-in fade-in duration-300">
-      <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shrink-0">
-        <BrainCircuit size={16} className="text-white" />
-      </div>
-      <div className="bg-white/80 dark:bg-white/10 border border-black/5 dark:border-white/10 backdrop-blur-xl rounded-2xl rounded-bl-sm px-5 py-4 shadow-sm">
-        <div className="flex gap-1.5 items-center h-4">
-          {[0, 1, 2].map(i => (
-            <motion.div
-              key={i}
-              className="w-2 h-2 bg-indigo-500 dark:bg-indigo-400 rounded-full"
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15 }}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+const STARTER_PROMPTS = {
+  Biology:   ["Explain the sliding filament theory", "What is the difference between mitosis and meiosis?", "How does the immune system fight pathogens?"],
+  Chemistry: ["Explain SN1 vs SN2 reactions", "What is Le Chatelier's principle?", "Explain hybridization with examples"],
+  Physics:   ["What is the Doppler Effect?", "Explain Faraday's Law of Induction", "How does projectile motion work?"],
+};
 
 export default function Tutor() {
-  const [activeSubject, setActiveSubject] = useState('Biology');
-  const [messages, setMessages] = useState([]);
-  const [inputValue, setInputValue] = useState('');
+  const { userData } = useFirebase();
+  const studentName = userData?.displayName || userData?.email?.split('@')[0] || 'Student';
+
+  const [selectedSubject, setSelectedSubject] = useState(SUBJECTS[0]);
+  const [messages, setMessages] = useState([]); // { role: 'user'|'ai', text: string }
+  const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [chatSession, setChatSession] = useState(null);
+
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Auto-scroll to newest message
+  // 1. Initialize a fresh Gemini chat session whenever the subject changes
+  useEffect(() => {
+    const session = createChatSession(studentName, selectedSubject.prompt);
+    setChatSession(session);
+    setMessages([]); // Clear history on subject switch (AI gets a fresh context)
+  }, [selectedSubject, studentName]);
+
+  // 2. Auto-scroll to bottom on every new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  const handleSend = async (textOverride) => {
-    const text = textOverride || inputValue.trim();
-    if (!text || isLoading) return;
+  // 3. Send Message Handler
+  const handleSend = async (text) => {
+    const messageText = (text || inputText).trim();
+    if (!messageText || isLoading || !chatSession) return;
 
-    const userMessage = { role: 'user', text };
-    const updatedMessages = [...messages, userMessage];
-
-    setMessages(updatedMessages);
-    setInputValue('');
+    setInputText('');
+    setMessages(prev => [...prev, { role: 'user', text: messageText }]);
     setIsLoading(true);
-    setError(null);
 
     try {
-      const aiText = await sendMessageToAI(updatedMessages, activeSubject);
-      setMessages(prev => [...prev, { role: 'model', text: aiText }]);
+      const aiText = await sendMessage(chatSession, messageText);
+      setMessages(prev => [...prev, { role: 'ai', text: aiText }]);
     } catch (err) {
-      setError(err.message);
+      setMessages(prev => [...prev, {
+        role: 'ai',
+        text: "⚠️ I encountered an error connecting to my AI core. Please check your API key or try again shortly.",
+        isError: true,
+      }]);
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
@@ -94,181 +78,189 @@ export default function Tutor() {
     }
   };
 
-  const handleClearChat = () => {
+  const handleNewChat = () => {
+    const session = createChatSession(studentName, selectedSubject.prompt);
+    setChatSession(session);
     setMessages([]);
-    setError(null);
+    inputRef.current?.focus();
   };
 
-  const handleSubjectChange = (subject) => {
-    setActiveSubject(subject);
-    setMessages([]);
-    setError(null);
-  };
-
-  const subjectData = SUBJECTS.find(s => s.label === activeSubject);
-  const colorMap = {
-    emerald: { btn: 'bg-emerald-500 text-white shadow-emerald-500/30', ring: 'ring-emerald-500', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
-    blue:    { btn: 'bg-blue-500 text-white shadow-blue-500/30', ring: 'ring-blue-500', badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-    fuchsia: { btn: 'bg-fuchsia-500 text-white shadow-fuchsia-500/30', ring: 'ring-fuchsia-500', badge: 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-300' },
-    amber:   { btn: 'bg-amber-500 text-white shadow-amber-500/30', ring: 'ring-amber-500', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
-  };
-  const currentColor = colorMap[subjectData?.color] || colorMap.blue;
+  const styles = SUBJECT_STYLES[selectedSubject.color];
 
   return (
-    <div className="flex-1 flex flex-col h-full w-full overflow-hidden bg-gray-50/50 dark:bg-[#09090b]">
-      
-      {/* ─── Header ─── */}
-      <div className="shrink-0 border-b border-black/5 dark:border-white/10 bg-white/80 dark:bg-black/50 backdrop-blur-2xl px-6 py-4 z-10">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-5xl mx-auto w-full">
-          
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-              <BrainCircuit size={20} className="text-white" />
+    <div className="flex-1 flex flex-col h-full w-full overflow-hidden bg-white dark:bg-[#09090b]">
+
+      {/* ── TOP HEADER ────────────────────────────────────── */}
+      <header className="shrink-0 border-b border-gray-200 dark:border-white/10 px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-gray-50/80 dark:bg-black/60 backdrop-blur-md z-10">
+        
+        {/* Left: Title */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+            <BrainCircuit className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-black text-gray-900 dark:text-white tracking-tight">MedIQ AI Tutor</h1>
+            <p className="text-xs text-gray-500 font-medium">Powered by Gemini 2.0 Flash · Full session memory</p>
+          </div>
+        </div>
+
+        {/* Right: Subject Pills + Reset */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {SUBJECTS.map((subj) => {
+            const Icon = subj.icon;
+            const s = SUBJECT_STYLES[subj.color];
+            const isActive = selectedSubject.key === subj.key;
+            return (
+              <button
+                key={subj.key}
+                onClick={() => setSelectedSubject(subj)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold border transition-all duration-300 ${isActive ? s.active : s.pill}`}
+              >
+                <Icon size={14} />
+                {subj.label}
+              </button>
+            );
+          })}
+          <button
+            onClick={handleNewChat}
+            title="Start new chat"
+            className="ml-2 p-2 rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors border border-transparent hover:border-black/10 dark:hover:border-white/10"
+          >
+            <RotateCcw size={16} />
+          </button>
+        </div>
+      </header>
+
+      {/* ── CHAT CANVAS ────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-6">
+
+        {/* Empty state: Starter Prompts */}
+        {messages.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col items-center justify-center text-center py-12 space-y-8"
+          >
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/30">
+              <BrainCircuit className="w-10 h-10 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">MedAI Tutor</h1>
-              <p className="text-xs text-gray-500 font-medium">Powered by Google Gemini</p>
+              <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
+                Hello, {studentName}! 👋
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 font-medium max-w-md">
+                I'm your personal MDCAT tutor. Ask me anything about {selectedSubject.label}, or pick a starter question below.
+              </p>
             </div>
-          </div>
-
-          {/* Subject Selector Pills */}
-          <div className="flex gap-2 flex-wrap">
-            {SUBJECTS.map(({ label, icon: Icon, color }) => {
-              const isActive = activeSubject === label;
-              return (
+            <div className="flex flex-col gap-3 w-full max-w-md">
+              {STARTER_PROMPTS[selectedSubject.key].map((prompt) => (
                 <button
-                  key={label}
-                  onClick={() => handleSubjectChange(label)}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-bold text-xs transition-all duration-300 border ${
-                    isActive
-                      ? `${colorMap[color].btn} shadow-lg border-transparent`
-                      : 'bg-white dark:bg-white/5 border-black/5 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
-                  }`}
+                  key={prompt}
+                  onClick={() => handleSend(prompt)}
+                  className="text-left px-5 py-4 rounded-2xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/10 hover:border-primary/30 hover:shadow-md transition-all duration-300 text-gray-700 dark:text-gray-300 font-medium text-sm"
                 >
-                  <Icon size={13} />
-                  {label}
+                  {prompt} →
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
-          {/* Clear Button */}
-          {messages.length > 0 && (
-            <button onClick={handleClearChat} className="flex items-center gap-2 text-xs text-gray-400 hover:text-red-500 transition-colors font-medium px-3 py-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20">
-              <Trash2 size={14} /> Clear
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ─── Chat Area ─── */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8 space-y-6 scroll-smooth">
-        <div className="max-w-3xl mx-auto w-full space-y-6">
-
-          {/* Empty State */}
-          {messages.length === 0 && !isLoading && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              className="flex flex-col items-center justify-center py-16 text-center gap-6"
+        {/* Message Bubbles */}
+        <AnimatePresence>
+          {messages.map((msg, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 16, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
             >
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/30">
-                <Sparkles size={36} className="text-white" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-black text-gray-900 dark:text-white">Ask MedAI Anything</h2>
-                <p className="text-gray-500 font-medium max-w-sm">Currently focused on <strong className={currentColor.badge.includes('emerald') ? 'text-emerald-600' : 'text-indigo-600'}>{activeSubject}</strong>. Switch subjects using the pills above.</p>
-              </div>
+              {/* Avatar */}
+              {msg.role === 'ai' ? (
+                <div className="shrink-0 w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/20 mt-1">
+                  <BrainCircuit size={18} className="text-white" />
+                </div>
+              ) : (
+                <div className="shrink-0 w-9 h-9 rounded-2xl bg-gray-200 dark:bg-white/10 flex items-center justify-center mt-1">
+                  <User size={18} className="text-gray-500 dark:text-gray-400" />
+                </div>
+              )}
 
-              {/* Quick Prompts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
-                {QUICK_PROMPTS.map((prompt) => (
-                  <button
-                    key={prompt}
-                    onClick={() => handleSend(prompt)}
-                    className="text-left px-4 py-3 rounded-2xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
-                  >
-                    {prompt} →
-                  </button>
-                ))}
+              {/* Bubble */}
+              <div
+                className={`max-w-[80%] md:max-w-[68%] px-5 py-4 rounded-3xl text-sm leading-relaxed font-medium whitespace-pre-wrap shadow-sm ${
+                  msg.role === 'user'
+                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-tr-sm'
+                    : msg.isError
+                    ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/40 rounded-tl-sm'
+                    : 'bg-gray-100 dark:bg-white/5 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/10 rounded-tl-sm'
+                }`}
+              >
+                {msg.text}
               </div>
             </motion.div>
-          )}
+          ))}
+        </AnimatePresence>
 
-          {/* Message Bubbles */}
-          <AnimatePresence>
-            {messages.map((msg, i) => {
-              const isUser = msg.role === 'user';
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                  className={`flex items-end gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
-                >
-                  {/* Avatar */}
-                  {!isUser && (
-                    <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shrink-0">
-                      <BrainCircuit size={16} className="text-white" />
-                    </div>
-                  )}
-                  
-                  {/* Bubble */}
-                  <div className={`max-w-[80%] px-5 py-4 rounded-2xl shadow-sm text-sm leading-relaxed font-medium ${ 
-                    isUser 
-                      ? 'bg-primary text-white rounded-br-sm shadow-indigo-500/20'
-                      : 'bg-white/90 dark:bg-white/10 text-gray-800 dark:text-gray-100 border border-black/5 dark:border-white/10 backdrop-blur-xl rounded-bl-sm'
-                  }`}>
-                    {isUser 
-                      ? msg.text 
-                      : <span dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }} />
-                    }
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-
-          {/* Typing Indicator */}
-          {isLoading && <TypingIndicator />}
-
-          {/* API Error */}
-          {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 rounded-2xl text-sm font-medium">
-              ⚠️ {error}
+        {/* Typing / Loading Indicator */}
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-3"
+          >
+            <div className="shrink-0 w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/20 mt-1">
+              <BrainCircuit size={18} className="text-white" />
             </div>
-          )}
+            <div className="px-5 py-4 rounded-3xl rounded-tl-sm bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center gap-2 shadow-sm">
+              <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          </motion.div>
+        )}
 
-          <div ref={bottomRef} />
-        </div>
+        <div ref={bottomRef} />
       </div>
 
-      {/* ─── Input Bar ─── */}
-      <div className="shrink-0 border-t border-black/5 dark:border-white/10 bg-white/80 dark:bg-black/50 backdrop-blur-2xl p-4 md:p-6">
-        <div className="max-w-3xl mx-auto w-full">
-          <div className="flex gap-3 items-end bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl px-4 py-3 shadow-sm focus-within:shadow-[0_0_0_2px_rgba(99,102,241,0.4)] transition-shadow duration-300">
+      {/* ── INPUT BAR ────────────────────────────────────── */}
+      <div className="shrink-0 border-t border-gray-200 dark:border-white/10 p-4 md:p-6 bg-white/80 dark:bg-black/60 backdrop-blur-md">
+        <div className="max-w-4xl mx-auto flex items-end gap-3">
+          <div className="flex-1 relative">
             <textarea
               ref={inputRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={`Ask about ${activeSubject}... (Enter to send)`}
               rows={1}
-              className="flex-1 bg-transparent outline-none resize-none text-sm text-gray-800 dark:text-gray-100 placeholder:text-gray-400 font-medium leading-relaxed max-h-32 self-center"
-              style={{ fieldSizing: 'content' }}
+              value={inputText}
+              onChange={(e) => {
+                setInputText(e.target.value);
+                // Auto-grow textarea
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px';
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder={`Ask anything about ${selectedSubject.label}...`}
               disabled={isLoading}
+              className="w-full px-5 py-4 pr-4 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-sm font-medium leading-relaxed disabled:opacity-50"
+              style={{ minHeight: '54px', maxHeight: '160px', overflowY: 'auto' }}
             />
-            <button
-              onClick={() => handleSend()}
-              disabled={!inputValue.trim() || isLoading}
-              className="w-9 h-9 shrink-0 rounded-xl bg-primary text-white flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 active:scale-95 transition-all duration-200 shadow-md"
-            >
-              <Send size={16} />
-            </button>
           </div>
-          <p className="text-center text-[11px] text-gray-400 mt-3 font-medium">MedAI can make mistakes. Always verify critical medical facts.</p>
+          <button
+            onClick={() => handleSend()}
+            disabled={!inputText.trim() || isLoading}
+            className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 font-bold shadow-md ${
+              inputText.trim() && !isLoading
+                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:scale-110 shadow-black/20'
+                : 'bg-gray-200 dark:bg-white/10 text-gray-400 cursor-not-allowed opacity-50'
+            }`}
+          >
+            <Send size={18} />
+          </button>
         </div>
+        <p className="text-center text-xs text-gray-400 mt-3 font-medium">
+          Press <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-white/10 rounded text-gray-500 dark:text-gray-400 font-mono">Enter</kbd> to send · <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-white/10 rounded text-gray-500 dark:text-gray-400 font-mono">Shift+Enter</kbd> for new line · Switch subject to refocus context
+        </p>
       </div>
     </div>
   );

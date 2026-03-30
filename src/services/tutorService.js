@@ -1,80 +1,65 @@
-// src/services/tutorService.js
-// Handles all communication with the Google Gemini API
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-// The master system prompt that keeps the AI locked on MDCAT topics
-const SYSTEM_PROMPT = `You are MedAI, an elite MDCAT preparation tutor for Pakistani students. 
-You have deep expertise in the following MDCAT subjects:
-- Biology (Cell Biology, Genetics, Human Physiology, Ecology, Biochemistry)
-- Chemistry (Organic, Inorganic, Physical Chemistry, Thermodynamics, Electrochemistry)
-- Physics (Mechanics, Waves, Thermodynamics, Electromagnetism, Optics, Modern Physics)
-- English (Grammar, Comprehension, Vocabulary as tested in MDCAT)
+// System prompt: locks the AI into MDCAT tutor mode
+const buildSystemInstruction = (studentName, subject) => `
+You are MedIQ, an elite AI tutor specializing exclusively in MDCAT (Medicine and Dentistry College Admission Test) preparation for Pakistani medical students.
 
-Rules you MUST follow:
-1. Answer questions ONLY about MDCAT preparation, science subjects, or study strategies.
-2. If asked about unrelated topics (sports, politics, etc.), politely decline and redirect.
-3. Keep answers concise but comprehensive — ideal for students who need to learn fast.
-4. Use numbered lists, bullet points, and bold text to structure your responses clearly.
-5. When explaining concepts, always include: a simple definition, the key mechanism, and an MDCAT exam tip.
-6. Speak in an encouraging, confident, motivating tone. You believe in every student.`;
+Student Name: ${studentName || "Student"}
+Current Subject Focus: ${subject || "General MDCAT"}
+
+Your personality:
+- Highly knowledgeable, warm, and encouraging
+- You explain complex science concepts in simple, memorable ways
+- You use real-world analogies to make abstract concepts stick
+- You are concise — no unnecessary filler text
+
+Your strict rules:
+- Only answer questions related to MDCAT subjects: Biology, Chemistry, Physics, English, and Logical Reasoning
+- If asked about anything unrelated to MDCAT, politely redirect the student
+- When answering, structure your response clearly (use bullet points or numbered steps for complex topics)
+- Always end with a brief motivating line to keep the student energized
+
+Always remember the full conversation history and refer back to earlier messages when relevant.
+`;
 
 /**
- * Sends a message to the Gemini API with full conversation context.
- * @param {Array} messageHistory - array of { role: 'user'|'model', text: string }
- * @param {string} activeSubject - The subject tab currently selected by the student
+ * Creates a fresh Gemini chat session with full conversation memory.
+ * Call this once when the Tutor page mounts, then reuse the `chatSession` object.
  */
-export async function sendMessageToAI(messageHistory, activeSubject) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  
-  if (!apiKey) {
-    throw new Error("VITE_GEMINI_API_KEY is not set. Please add it to your .env file.");
+export function createChatSession(studentName, subject) {
+  if (!API_KEY) {
+    console.error("VITE_GEMINI_API_KEY is missing. Add it to your .env.local file.");
+    return null;
   }
 
-  // Build the Gemini `contents` array from our message history
-  // The first entry is the system prompt injected as a model turn
-  const contents = [
-    {
-      role: "user",
-      parts: [{ text: SYSTEM_PROMPT + `\n\nThe student is currently focused on: ${activeSubject}. Prioritize responses related to this subject.` }]
-    },
-    {
-      role: "model",
-      parts: [{ text: `Understood! I'm MedAI, your dedicated MDCAT tutor. I'm ready to help you master ${activeSubject}. What would you like to explore today?` }]
-    },
-    // Inject all real message history after the system context
-    ...messageHistory.map(msg => ({
-      role: msg.role,
-      parts: [{ text: msg.text }]
-    }))
-  ];
+  const genAI = new GoogleGenerativeAI(API_KEY);
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents,
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 1024,
-      },
-      safetySettings: [
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-      ]
-    })
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    systemInstruction: buildSystemInstruction(studentName, subject),
   });
 
-  if (!response.ok) {
-    const errData = await response.json();
-    throw new Error(errData?.error?.message || "Gemini API request failed.");
-  }
+  // `startChat` with empty history — Gemini will accumulate the full session turns automatically
+  const chatSession = model.startChat({
+    history: [],
+    generationConfig: {
+      temperature: 0.7,
+      topP: 0.9,
+      maxOutputTokens: 1024,
+    },
+  });
 
-  const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  
-  if (!text) throw new Error("No response received from AI.");
-  return text;
+  return chatSession;
+}
+
+/**
+ * Sends a message to an existing chat session and returns the AI response text.
+ * Full conversation history is maintained inside the `chatSession` object by the SDK.
+ */
+export async function sendMessage(chatSession, userMessage) {
+  if (!chatSession) throw new Error("No active chat session.");
+  const result = await chatSession.sendMessage(userMessage);
+  return result.response.text();
 }
