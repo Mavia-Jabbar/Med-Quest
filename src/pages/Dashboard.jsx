@@ -4,6 +4,7 @@ import { Flame } from 'lucide-react';
 import StreakWidget from '@/components/dashboard/StreakWidget';
 import MasteryWidget from '@/components/dashboard/MasteryWidget';
 import QuickActions from '@/components/dashboard/QuickActions';
+import HoverTiltCard from '@/components/ui/HoverTiltCard';
 import { useSubjectProgress, useStreak } from '@/services/progressService';
 
 const Dashboard = () => {
@@ -42,15 +43,6 @@ const Dashboard = () => {
           <Flame className="w-4 h-4 text-orange-500" />
           <span className="text-sm font-bold text-orange-600 dark:text-orange-400">{currentStreak}</span>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-4">
-        <StreakWidget currentStreak={currentStreak} />
-        <MasteryWidget analytics={analytics} />
-      </div>
-
-      <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Quick Actions</h2>
       </div>
 
       <QuickActions />

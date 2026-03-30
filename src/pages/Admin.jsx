@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { uploadMaterial, useMaterialsList, deleteMaterial } from '@/services/materialService';
-import { UploadCloud, CheckCircle2, Trash2, FileText, Loader2, ArrowLeft } from 'lucide-react';
+import { UploadCloud, CheckCircle2, Trash2, FileText, ArrowLeft } from 'lucide-react';
+import CustomLoader from '@/components/ui/CustomLoader';
+import MagneticButton from '@/components/ui/MagneticButton';
 import { NavLink } from 'react-router';
 
 export default function Admin() {
@@ -139,13 +141,14 @@ export default function Admin() {
             />
           </div>
 
-          <button 
+          <MagneticButton 
+            strength={15}
             type="submit" 
             disabled={loading}
-            className="w-full py-4 mt-8 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold hover:scale-[1.02] shadow-xl transition-all disabled:opacity-50"
+            className="w-full py-4 mt-8 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold shadow-xl transition-all disabled:opacity-50 hover:bg-black dark:hover:bg-gray-200"
           >
             {loading ? "Deploying Code..." : "Publish to Firebase"}
-          </button>
+          </MagneticButton>
         </form>
       </div>
 
@@ -163,10 +166,7 @@ export default function Admin() {
         </div>
 
         {listLoading ? (
-            <div className="w-full py-32 flex flex-col items-center justify-center">
-               <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-               <p className="text-gray-500 font-medium">Synchronizing with Google Cloud...</p>
-            </div>
+            <CustomLoader text="Syncing Google Cloud..." />
         ) : materialsList.length === 0 ? (
             <div className="w-full py-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl bg-white/30 dark:bg-black/20">
                <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />

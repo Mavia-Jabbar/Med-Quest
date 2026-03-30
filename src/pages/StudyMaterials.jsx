@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, FileText, ChevronRight, FolderOpen, Dna, Atom, Magnet, Loader2, Info } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { BookOpen, FileText, ChevronRight, FolderOpen, Dna, Atom, Magnet, Info } from 'lucide-react';
 import PDFViewerEngine from '@/components/study/PDFViewerEngine';
+import CustomLoader from '@/components/ui/CustomLoader';
+import MagneticButton from '@/components/ui/MagneticButton';
 import { useFirebase } from '@/Context/firebase';
 import { trackSubjectProgress } from '@/services/progressService';
 import { useMaterialsList } from '@/services/materialService';
@@ -99,10 +100,7 @@ export default function StudyMaterials() {
       </div>
 
       {loading ? (
-         <div className="flex flex-col items-center justify-center py-20 animate-in fade-in">
-           <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-           <p className="text-gray-500 dark:text-gray-400 font-medium tracking-wide">Retrieving documents from Cloud...</p>
-         </div>
+         <CustomLoader text="Fetching Cloud Blueprints..." />
       ) : currentSubjectData?.units.length === 0 ? (
          <div className="flex flex-col items-center justify-center py-20 animate-in fade-in border border-dashed border-gray-300 dark:border-gray-700 rounded-3xl bg-white/30 dark:bg-black/20">
             <div className="w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-4 text-gray-400">
@@ -159,12 +157,13 @@ export default function StudyMaterials() {
                           <h4 className="font-bold text-gray-900 dark:text-white text-md mb-1 leading-snug">{mat.title}</h4>
                           <span className="text-xs text-gray-500 font-medium mb-5">{mat.size}</span>
                           
-                          <Button 
+                          <MagneticButton 
+                            strength={20}
                             onClick={() => handleOpenViewer(mat, currentSubjectData.subject)} 
-                            className="w-full mt-auto bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:scale-[1.02] shadow-md border-none rounded-xl font-bold transition-transform"
+                            className="w-full mt-auto bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md border-none rounded-xl font-bold transition-all p-3 hover:bg-black dark:hover:bg-gray-200"
                           >
                             Open Viewer
-                          </Button>
+                          </MagneticButton>
                         </div>
                       ))}
                     </div>
