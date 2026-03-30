@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router';
 import { useFirebase } from '@/Context/firebase';
-import { Loader2 } from 'lucide-react';
+import ScienceLoader from '@/components/ui/ScienceLoader';
 
 export default function AdminRoute() {
   const { userData, loading } = useFirebase();
@@ -10,7 +10,7 @@ export default function AdminRoute() {
   if (loading) {
     return (
       <div className="flex flex-1 w-full items-center justify-center min-h-[500px]">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <ScienceLoader text="Verifying Clearance..." />
       </div>
     );
   }

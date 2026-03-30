@@ -1,7 +1,7 @@
 "use client";
 import { Navigate, Outlet } from "react-router";
 import { useFirebase } from "@/Context/firebase"; // ← adjust path to your context
-import { Loader2 } from "lucide-react";
+import ScienceLoader from "@/components/ui/ScienceLoader";
 
 export default function AuthRedirect() {
   const { isLoggedIn, loading } = useFirebase();
@@ -9,8 +9,8 @@ export default function AuthRedirect() {
   // 1. Still checking auth state (Firebase needs ~200–800 ms on first load / refresh)
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-primary size-8" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50/50 via-white to-cyan-50/50 dark:from-gray-900 dark:via-gray-950 dark:to-slate-900">
+        <ScienceLoader text="Initializing Core Data..." />
       </div>
     );
   }
