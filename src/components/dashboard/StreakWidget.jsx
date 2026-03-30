@@ -3,7 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame } from 'lucide-react';
 import HoverTiltCard from '@/components/ui/HoverTiltCard';
 
+const QUOTES = [
+  "Every day is a step closer to the white coat. 🩺",
+  "Push yourself, because no one else will. ⚡",
+  "Discipline bridges the gap between goals and results. 🎯",
+  "Pain is temporary, a medical degree is forever. 🧠",
+  "The secret to getting ahead is getting started. 🚀",
+  "Small daily improvements build massive success. 📈",
+  "Fall in love with the process, not just the result. 📖"
+];
+
 export default function StreakWidget({ currentStreak }) {
+  // Select a consistent random quote per render
+  const quote = React.useMemo(() => QUOTES[Math.floor(Math.random() * QUOTES.length)], []);
+
+  // Limit cells to 7 for visual loop. If streak > 7, it stays maximum filled to reward the user!
+  const activeCells = Math.min(currentStreak, 7);
+
   return (
     <HoverTiltCard>
       <Card className="bg-white/60 dark:bg-black/50 backdrop-blur-xl border-white/40 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 relative overflow-hidden group h-full">
@@ -20,10 +36,19 @@ export default function StreakWidget({ currentStreak }) {
           </div>
           <div className="flex gap-2 w-full mt-5">
             {[...Array(7)].map((_, i) => (
-              <div key={i} className={`flex-1 h-2 rounded-full ${i < 5 ? "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]" : "bg-black/10 dark:bg-white/10"}`}></div>
+              <div 
+                key={i} 
+                className={`flex-1 h-2 rounded-full transition-all duration-700 ${
+                  i < activeCells 
+                    ? "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)] animate-pulse" 
+                    : "bg-black/10 dark:bg-white/10"
+                }`}
+              ></div>
             ))}
           </div>
-          <p className="text-xs font-medium text-gray-500 mt-3 text-center">You're in the top 10% of active students!</p>
+          <p className="text-[11px] uppercase tracking-widest font-bold text-gray-500 mt-4 text-center px-4 w-full">
+            "{quote}"
+          </p>
         </CardContent>
       </Card>
     </HoverTiltCard>
