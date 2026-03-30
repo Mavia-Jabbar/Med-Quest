@@ -12,7 +12,7 @@ if (apiKey) {
   genAI = new GoogleGenerativeAI(apiKey);
   // System Instructions explicitly limit the AI to MDCAT capabilities
   model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash", 
+    model: "gemini-flash-latest", 
     systemInstruction: "You are the primary elite MDCAT Tutor for the Med-Quest application. You must ONLY answer questions regarding Medical Sciences, Biology, Chemistry, and Physics. Be extremely concise, highly encouraging, and strictly accurate. Refuse to answer non-academic questions politely.",
   });
 }
