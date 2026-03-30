@@ -1,267 +1,154 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Send, BrainCircuit, Dna, FlaskConical, Zap, RotateCcw, User } from 'lucide-react';
-import { createChatSession, sendMessage } from '@/services/tutorService';
 import { useFirebase } from '@/Context/firebase';
-
-const SUBJECTS = [
-  { key: 'Biology',   label: 'Biology',   icon: Dna,          color: 'emerald', prompt: 'Biology (Cell Biology, Genetics, Human Physiology, Ecology)' },
-  { key: 'Chemistry', label: 'Chemistry', icon: FlaskConical, color: 'blue',    prompt: 'Chemistry (Organic, Inorganic, Physical, Thermodynamics)' },
-  { key: 'Physics',   label: 'Physics',   icon: Zap,          color: 'fuchsia', prompt: 'Physics (Mechanics, Electromagnetism, Optics, Modern Physics)' },
-];
-
-const SUBJECT_STYLES = {
-  emerald: { pill: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/40', active: 'bg-emerald-500 text-white border-transparent shadow-lg shadow-emerald-500/30', dot: 'bg-emerald-500' },
-  blue:    { pill: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/40', active: 'bg-blue-500 text-white border-transparent shadow-lg shadow-blue-500/30', dot: 'bg-blue-500' },
-  fuchsia: { pill: 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200 dark:bg-fuchsia-900/30 dark:text-fuchsia-400 dark:border-fuchsia-800/40', active: 'bg-fuchsia-500 text-white border-transparent shadow-lg shadow-fuchsia-500/30', dot: 'bg-fuchsia-500' },
-};
-
-const STARTER_PROMPTS = {
-  Biology:   ["Explain the sliding filament theory", "What is the difference between mitosis and meiosis?", "How does the immune system fight pathogens?"],
-  Chemistry: ["Explain SN1 vs SN2 reactions", "What is Le Chatelier's principle?", "Explain hybridization with examples"],
-  Physics:   ["What is the Doppler Effect?", "Explain Faraday's Law of Induction", "How does projectile motion work?"],
-};
+import { subscribeToChatHistory, askAITutor } from '@/services/aiTutorService';
+import { BrainCircuit, Send, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import ScienceLoader from '@/components/ui/ScienceLoader';
+import MagneticButton from '@/components/ui/MagneticButton';
+import ReactMarkdown from 'react-markdown'; // Ensure this exists, or fallback to raw text if needed. For now, we will render raw text securely or rely on basic formatting.
 
 export default function Tutor() {
   const { userData } = useFirebase();
-  const studentName = userData?.displayName || userData?.email?.split('@')[0] || 'Student';
-
-  const [selectedSubject, setSelectedSubject] = useState(SUBJECTS[0]);
-  const [messages, setMessages] = useState([]); // { role: 'user'|'ai', text: string }
-  const [inputText, setInputText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [chatSession, setChatSession] = useState(null);
-
-  const bottomRef = useRef(null);
-  const inputRef = useRef(null);
-
-  // 1. Initialize a fresh Gemini chat session whenever the subject changes
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [error, setError] = useState(null);
+  const chatEndRef = useRef(null);
+  
+  // Real-time listener for Firestore Chat History
   useEffect(() => {
-    const session = createChatSession(studentName, selectedSubject.prompt);
-    setChatSession(session);
-    setMessages([]); // Clear history on subject switch (AI gets a fresh context)
-  }, [selectedSubject, studentName]);
+    if (!userData?.uid) return;
+    
+    const unsubscribe = subscribeToChatHistory(userData.uid, (history) => {
+      setMessages(history);
+    });
 
-  // 2. Auto-scroll to bottom on every new message
+    return () => unsubscribe();
+  }, [userData?.uid]);
+
+  // Auto-scroll to latest message
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
 
-  // 3. Send Message Handler
-  const handleSend = async (text) => {
-    const messageText = (text || inputText).trim();
-    if (!messageText || isLoading || !chatSession) return;
-
-    setInputText('');
-    setMessages(prev => [...prev, { role: 'user', text: messageText }]);
-    setIsLoading(true);
+  const handleSend = async (e) => {
+    e?.preventDefault();
+    if (!input.trim() || isTyping) return;
+    
+    const userQuery = input.trim();
+    setInput('');
+    setIsTyping(true);
+    setError(null);
 
     try {
-      const aiText = await sendMessage(chatSession, messageText);
-      setMessages(prev => [...prev, { role: 'ai', text: aiText }]);
+      await askAITutor(userData.uid, userQuery, messages);
     } catch (err) {
-      setMessages(prev => [...prev, {
-        role: 'ai',
-        text: "⚠️ I encountered an error connecting to my AI core. Please check your API key or try again shortly.",
-        isError: true,
-      }]);
+      setError(err.message || "The Gemini AI failed to respond. Check API keys.");
     } finally {
-      setIsLoading(false);
-      inputRef.current?.focus();
+      setIsTyping(false);
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+  const handleQuickPrompt = (promptTexts) => {
+    setInput(promptTexts);
   };
-
-  const handleNewChat = () => {
-    const session = createChatSession(studentName, selectedSubject.prompt);
-    setChatSession(session);
-    setMessages([]);
-    inputRef.current?.focus();
-  };
-
-  const styles = SUBJECT_STYLES[selectedSubject.color];
 
   return (
-    <div className="flex-1 flex flex-col h-full w-full overflow-hidden bg-white dark:bg-[#09090b]">
-
-      {/* ── TOP HEADER ────────────────────────────────────── */}
-      <header className="shrink-0 border-b border-gray-200 dark:border-white/10 px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-gray-50/80 dark:bg-black/60 backdrop-blur-md z-10">
-        
-        {/* Left: Title */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-            <BrainCircuit className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-black text-gray-900 dark:text-white tracking-tight">MedIQ AI Tutor</h1>
-            <p className="text-xs text-gray-500 font-medium">Powered by Gemini 2.0 Flash · Full session memory</p>
-          </div>
-        </div>
-
-        {/* Right: Subject Pills + Reset */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {SUBJECTS.map((subj) => {
-            const Icon = subj.icon;
-            const s = SUBJECT_STYLES[subj.color];
-            const isActive = selectedSubject.key === subj.key;
-            return (
-              <button
-                key={subj.key}
-                onClick={() => setSelectedSubject(subj)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold border transition-all duration-300 ${isActive ? s.active : s.pill}`}
-              >
-                <Icon size={14} />
-                {subj.label}
-              </button>
-            );
-          })}
-          <button
-            onClick={handleNewChat}
-            title="Start new chat"
-            className="ml-2 p-2 rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors border border-transparent hover:border-black/10 dark:hover:border-white/10"
-          >
-            <RotateCcw size={16} />
-          </button>
-        </div>
-      </header>
-
-      {/* ── CHAT CANVAS ────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-6">
-
-        {/* Empty state: Starter Prompts */}
-        {messages.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col items-center justify-center text-center py-12 space-y-8"
-          >
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/30">
-              <BrainCircuit className="w-10 h-10 text-white" />
+    <div className="flex-1 w-full h-[calc(100vh-80px)] md:h-full flex flex-col bg-white dark:bg-[#09090b] relative animate-in fade-in duration-700">
+      
+      {/* Tutor Header */}
+      <header className="h-20 shrink-0 border-b border-black/5 dark:border-white/10 px-8 flex items-center justify-between bg-white/80 dark:bg-black/50 backdrop-blur-xl z-20">
+         <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-sm">
+               <BrainCircuit size={24} />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
-                Hello, {studentName}! 👋
-              </h2>
-              <p className="text-gray-500 dark:text-gray-400 font-medium max-w-md">
-                I'm your personal MDCAT tutor. Ask me anything about {selectedSubject.label}, or pick a starter question below.
-              </p>
+               <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">Gemini Medical Tutor <Sparkles size={16} className="text-yellow-500 fill-yellow-500" /></h1>
+               <p className="text-sm font-medium text-green-500 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online and Ready</p>
             </div>
-            <div className="flex flex-col gap-3 w-full max-w-md">
-              {STARTER_PROMPTS[selectedSubject.key].map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => handleSend(prompt)}
-                  className="text-left px-5 py-4 rounded-2xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/10 hover:border-primary/30 hover:shadow-md transition-all duration-300 text-gray-700 dark:text-gray-300 font-medium text-sm"
-                >
-                  {prompt} →
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
+         </div>
+      </header>
 
-        {/* Message Bubbles */}
-        <AnimatePresence>
-          {messages.map((msg, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 16, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
-            >
-              {/* Avatar */}
-              {msg.role === 'ai' ? (
-                <div className="shrink-0 w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/20 mt-1">
-                  <BrainCircuit size={18} className="text-white" />
-                </div>
-              ) : (
-                <div className="shrink-0 w-9 h-9 rounded-2xl bg-gray-200 dark:bg-white/10 flex items-center justify-center mt-1">
-                  <User size={18} className="text-gray-500 dark:text-gray-400" />
-                </div>
-              )}
-
-              {/* Bubble */}
-              <div
-                className={`max-w-[80%] md:max-w-[68%] px-5 py-4 rounded-3xl text-sm leading-relaxed font-medium whitespace-pre-wrap shadow-sm ${
-                  msg.role === 'user'
-                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-tr-sm'
-                    : msg.isError
-                    ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/40 rounded-tl-sm'
-                    : 'bg-gray-100 dark:bg-white/5 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/10 rounded-tl-sm'
-                }`}
-              >
-                {msg.text}
+      {/* Main Chat Feed */}
+      <div className="flex-1 overflow-y-auto w-full relative p-6 md:p-10 space-y-8 bg-gradient-to-br from-purple-50/30 via-transparent to-pink-50/30 dark:from-purple-950/20 dark:to-transparent">
+         
+         {messages.length === 0 && !isTyping && (
+           <div className="h-full w-full flex flex-col items-center justify-center animate-in zoom-in-95 duration-700 pb-20">
+              <div className="w-24 h-24 mb-8 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center text-purple-500">
+                 <BrainCircuit size={48} />
               </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+              <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-4 text-center">Hello, Dr. {userData?.name || 'Student'}.</h2>
+              <p className="text-lg text-gray-500 font-medium text-center max-w-xl mb-12 relative z-10">I am the Med-Quest Gemini Advanced Intelligence. I have memorized every medical syllabus. What concept should we break down today?</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl">
+                {['Explain Meiosis vs Mitosis', 'How do I calculate pH?', 'What is Newton\'s 3rd Law?'].map((q, i) => (
+                  <button key={i} onClick={() => handleQuickPrompt(q)} className="p-4 bg-white/80 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl text-left hover:-translate-y-1 hover:shadow-lg transition-all duration-300 group shadow-sm backdrop-blur-md">
+                    <Sparkles size={16} className="text-primary mb-3 opacity-50 group-hover:opacity-100" />
+                    <span className="font-semibold text-gray-700 dark:text-gray-300 block">{q}</span>
+                  </button>
+                ))}
+              </div>
+           </div>
+         )}
 
-        {/* Typing / Loading Indicator */}
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-start gap-3"
-          >
-            <div className="shrink-0 w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/20 mt-1">
-              <BrainCircuit size={18} className="text-white" />
-            </div>
-            <div className="px-5 py-4 rounded-3xl rounded-tl-sm bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center gap-2 shadow-sm">
-              <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-            </div>
-          </motion.div>
-        )}
+         {messages.map((msg, idx) => {
+           const isModel = msg.role === 'model';
+           return (
+             <div key={msg.id || idx} className={`flex w-full ${isModel ? 'justify-start' : 'justify-end'} animate-in slide-in-from-bottom-4 duration-500`}>
+               <div className={`max-w-[85%] md:max-w-[70%] rounded-3xl p-5 ${isModel ? 'bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-gray-800 dark:text-gray-200 rounded-tl-sm' : 'bg-primary text-white shadow-xl shadow-primary/20 rounded-tr-sm'}`}>
+                  {isModel && (
+                    <div className="flex items-center gap-2 mb-3 text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                       <Sparkles size={14} /> AI Tutor
+                    </div>
+                  )}
+                  {/* Since ReactMarkdown requires another package, we'll cleanly render raw text with whitespace preservation */}
+                  <div className="whitespace-pre-wrap leading-relaxed font-medium font-sans">
+                     {msg.text}
+                  </div>
+               </div>
+             </div>
+           );
+         })}
 
-        <div ref={bottomRef} />
+         {isTyping && (
+            <div className="flex w-full justify-start animate-in fade-in">
+               <div className="max-w-[85%] rounded-3xl p-6 bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-sm rounded-tl-sm">
+                  <div className="flex items-center gap-4 text-purple-600 font-bold uppercase text-xs tracking-widest">
+                     <RefreshCw className="animate-spin" size={16} /> Retrieving Medical Data...
+                  </div>
+               </div>
+            </div>
+         )}
+         
+         <div ref={chatEndRef} />
       </div>
 
-      {/* ── INPUT BAR ────────────────────────────────────── */}
-      <div className="shrink-0 border-t border-gray-200 dark:border-white/10 p-4 md:p-6 bg-white/80 dark:bg-black/60 backdrop-blur-md">
-        <div className="max-w-4xl mx-auto flex items-end gap-3">
-          <div className="flex-1 relative">
-            <textarea
-              ref={inputRef}
-              rows={1}
-              value={inputText}
-              onChange={(e) => {
-                setInputText(e.target.value);
-                // Auto-grow textarea
-                e.target.style.height = 'auto';
-                e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px';
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder={`Ask anything about ${selectedSubject.label}...`}
-              disabled={isLoading}
-              className="w-full px-5 py-4 pr-4 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-sm font-medium leading-relaxed disabled:opacity-50"
-              style={{ minHeight: '54px', maxHeight: '160px', overflowY: 'auto' }}
-            />
-          </div>
-          <button
-            onClick={() => handleSend()}
-            disabled={!inputText.trim() || isLoading}
-            className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 font-bold shadow-md ${
-              inputText.trim() && !isLoading
-                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:scale-110 shadow-black/20'
-                : 'bg-gray-200 dark:bg-white/10 text-gray-400 cursor-not-allowed opacity-50'
-            }`}
-          >
-            <Send size={18} />
-          </button>
-        </div>
-        <p className="text-center text-xs text-gray-400 mt-3 font-medium">
-          Press <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-white/10 rounded text-gray-500 dark:text-gray-400 font-mono">Enter</kbd> to send · <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-white/10 rounded text-gray-500 dark:text-gray-400 font-mono">Shift+Enter</kbd> for new line · Switch subject to refocus context
-        </p>
+      {/* Input Composer Zone */}
+      <div className="shrink-0 p-6 bg-white/80 dark:bg-[#09090b]/80 backdrop-blur-xl border-t border-black/5 dark:border-white/10 z-20">
+         <div className="max-w-4xl mx-auto relative">
+           
+           {error && (
+             <div className="absolute -top-14 left-0 right-0 bg-red-100/90 dark:bg-red-900/90 backdrop-blur-md text-red-600 dark:text-red-200 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg animate-in slide-in-from-bottom-2">
+               <AlertCircle size={18} /> {error}
+             </div>
+           )}
+
+           <form onSubmit={handleSend} className="relative flex items-center">
+             <input
+               value={input}
+               onChange={(e) => setInput(e.target.value)}
+               placeholder="Ask anything about the MDCAT syllabus..."
+               disabled={isTyping}
+               className="w-full bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-white border-2 border-transparent focus:border-purple-500 dark:focus:border-purple-500 rounded-full pl-6 pr-16 py-4 outline-none font-medium placeholder:text-gray-400 disabled:opacity-50 transition-colors shadow-inner"
+             />
+             <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <MagneticButton disabled={!input.trim() || isTyping} className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center disabled:opacity-50 disabled:bg-gray-300 dark:disabled:bg-gray-800 disabled:cursor-not-allowed hover:scale-105 transition-all shadow-md shadow-primary/30">
+                   <Send size={18} className="ml-0.5" />
+                </MagneticButton>
+             </div>
+           </form>
+         </div>
       </div>
+
     </div>
   );
 }
