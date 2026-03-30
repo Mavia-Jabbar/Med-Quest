@@ -2,10 +2,9 @@ import { db } from "@/Context/firebase";
 import { doc, setDoc, increment, collection, onSnapshot, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
-// Track when a user reads a PDF or flips a flashcard
+// Track when a user reads a PDF or flips a flashcard (Raw Point System)
 export const trackSubjectProgress = async (userId, subject, pointsToAdd = 1) => {
   if (!userId) return;
-  // Collection structure: users/{userId}/progress/{subject}
   const progressRef = doc(db, "users", userId, "progress", subject);
   
   try {
@@ -13,12 +12,39 @@ export const trackSubjectProgress = async (userId, subject, pointsToAdd = 1) => 
       score: increment(pointsToAdd),
       lastStudied: new Date().toISOString()
     }, { merge: true });
-
-    // Ensure streak is updated whenever a student studies!
     await updateStreak(userId);
-
   } catch (error) {
     console.error("Failed to track subject progress:", error);
+  }
+};
+
+// Phase 3 Endpoint: Hard-codes the Mastery Score based on the Mock Test percentage, capping out exactly at 100%
+export const updateSubjectMastery = async (userId, subject, percentageScore) => {
+  if (!userId) return;
+  const progressRef = doc(db, "users", userId, "progress", subject);
+  
+  try {
+    // We only update if 'percentageScore' is higher than their previous stored score to prevent Gamification regression.
+    const snap = await getDoc(progressRef);
+    let newScore = percentageScore;
+
+    if (snap.exists()) {
+       const existingScore = snap.data().score || 0;
+       if (existingScore >= percentageScore) {
+         // They already got a higher score before, just update the timestamp
+         newScore = existingScore; 
+       }
+    }
+
+    await setDoc(progressRef, {
+      score: newScore,
+      lastStudied: new Date().toISOString(),
+      lastExamDate: new Date().toLocaleDateString('en-CA')
+    }, { merge: true });
+
+    await updateStreak(userId);
+  } catch (error) {
+    console.error("Failed to update subject mastery:", error);
   }
 };
 
