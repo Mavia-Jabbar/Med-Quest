@@ -38,8 +38,8 @@ export default function Admin() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto flex items-center justify-center p-6 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-black">
-      <div className="w-full max-w-lg bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl rounded-3xl shadow-xl p-8 border border-white/40 dark:border-white/10 animate-in zoom-in-95 duration-700">
+    <div className="flex-1 w-full flex items-center justify-center p-6 bg-transparent relative z-10 overflow-y-auto">
+      <div className="w-full max-w-lg bg-white/60 dark:bg-black/40 backdrop-blur-2xl rounded-3xl shadow-xl p-8 border border-white/40 dark:border-white/10 animate-in zoom-in-95 duration-700">
         
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 rounded-xl">

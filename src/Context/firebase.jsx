@@ -42,6 +42,7 @@ export const FirebaseProvider = (props) => {
         name,
         email,
         plan: "free",
+        role: "student",
         createdAt: new Date().toISOString(),
       });
       

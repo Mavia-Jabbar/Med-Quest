@@ -13,6 +13,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import StudyMaterials from "./pages/StudyMaterials";
 import Flashcards from "./pages/Flashcards";
 import Admin from "./pages/Admin";
+import AdminRoute from "@/components/AdminRoute";
 import { useFirebase } from "@/Context/firebase";
 
 function App() {
@@ -63,7 +64,10 @@ function App() {
             <Route path="/Dashboard" element={<Dashboard />} />
             <Route path="/Materials" element={<StudyMaterials />} />
             <Route path="/Flashcards" element={<Flashcards />} />
-            <Route path="/Admin" element={<Admin />} />
+            
+            <Route element={<AdminRoute />}>
+              <Route path="/Admin" element={<Admin />} />
+            </Route>
           </Route>
         </Route>
       </Routes>
