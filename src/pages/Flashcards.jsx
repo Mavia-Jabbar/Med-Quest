@@ -1,27 +1,18 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Layers, RotateCw, CheckCircle2, XCircle } from 'lucide-react';
+import { useFirebase } from '@/Context/firebase';
+import { trackSubjectProgress } from '@/services/progressService';
 
 export default function Flashcards() {
+  const { user } = useFirebase();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
   const cards = [
-    { 
-      subject: "Biology", 
-      front: "What is the powerhouse of the cell?", 
-      back: "Mitochondria - site of ATP production via cellular respiration."
-    },
-    { 
-      subject: "Physics", 
-      front: "What is Newton's Second Law of Motion?", 
-      back: "F = ma (Force equals mass times acceleration)."
-    },
-    { 
-      subject: "Chemistry", 
-      front: "What dictates the chemical properties of an atom?", 
-      back: "The number and arrangement of valence electrons."
-    }
+    { subject: "Biology", front: "What is the powerhouse of the cell?", back: "Mitochondria - site of ATP production via cellular respiration." },
+    { subject: "Physics", front: "What is Newton's Second Law of Motion?", back: "F = ma (Force equals mass times acceleration)." },
+    { subject: "Chemistry", front: "What dictates the chemical properties of an atom?", back: "The number and arrangement of valence electrons." }
   ];
 
   const handleNext = () => {
@@ -32,6 +23,14 @@ export default function Flashcards() {
   };
 
   const currentCard = cards[currentIndex];
+
+  const handleFlip = () => {
+    if (!isFlipped && user?.uid) {
+      // Track 1 progress point when they view the answer!
+      trackSubjectProgress(user.uid, currentCard.subject, 1);
+    }
+    setIsFlipped(!isFlipped);
+  };
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-8 overflow-y-auto">
@@ -55,7 +54,7 @@ export default function Flashcards() {
       {/* 3D Card Container */}
       <div className="w-full max-w-xl perspective-1000 mb-8 animate-in zoom-in-95 duration-700">
         <div 
-          onClick={() => setIsFlipped(!isFlipped)}
+          onClick={handleFlip}
           className="relative w-full h-[400px] cursor-pointer transition-transform duration-500 preserve-3d group"
           style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
         >
@@ -86,7 +85,7 @@ export default function Flashcards() {
         <Button onClick={() => handleNext()} variant="outline" className="h-14 w-14 rounded-full border border-red-200 dark:border-red-900 bg-white/50 dark:bg-black/50 hover:bg-red-50 dark:hover:bg-red-900/40 hover:text-red-500 transition-all shadow-md">
           <XCircle className="w-6 h-6" />
         </Button>
-        <Button onClick={() => setIsFlipped(!isFlipped)} className="h-14 px-8 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold hover:scale-105 transition-transform shadow-xl">
+        <Button onClick={handleFlip} className="h-14 px-8 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold hover:scale-105 transition-transform shadow-xl">
           <RotateCw className="w-5 h-5 mr-2" /> Flip Card
         </Button>
         <Button onClick={() => handleNext()} variant="outline" className="h-14 w-14 rounded-full border border-emerald-200 dark:border-emerald-900 bg-white/50 dark:bg-black/50 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 hover:text-emerald-500 transition-all shadow-md">

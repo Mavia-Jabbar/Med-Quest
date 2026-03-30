@@ -1,20 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BookOpen, FileText, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import PDFViewerEngine from '@/components/study/PDFViewerEngine';
+import { useFirebase } from '@/Context/firebase';
+import { trackSubjectProgress } from '@/services/progressService';
 
 export default function StudyMaterials() {
+  const { user } = useFirebase();
+  const [activePdf, setActivePdf] = useState(null);
+
   const materials = [
-    { title: "Cell Biology & Organelles", type: "PDF Notes", subject: "Biology", size: "2.4 MB" },
-    { title: "Organic Chemistry Mechanisms", type: "Cheat Sheet", subject: "Chemistry", size: "1.1 MB" },
-    { title: "Kinematics & Dynamics Formulae", type: "Cheat Sheet", subject: "Physics", size: "840 KB" },
-    { title: "Human Physiology Full Overview", type: "PDF Notes", subject: "Biology", size: "4.2 MB" },
-    { title: "Atomic Structure & Bonding", type: "PDF Notes", subject: "Chemistry", size: "3.5 MB" },
-    { title: "Thermodynamics Core Concepts", type: "Cheat Sheet", subject: "Physics", size: "1.5 MB" },
+    { title: "Cell Biology & Organelles", type: "PDF Notes", subject: "Biology", size: "2.4 MB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+    { title: "Organic Chemistry Mechanisms", type: "Cheat Sheet", subject: "Chemistry", size: "1.1 MB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+    { title: "Kinematics & Dynamics Formulae", type: "Cheat Sheet", subject: "Physics", size: "840 KB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+    { title: "Human Physiology Full Overview", type: "PDF Notes", subject: "Biology", size: "4.2 MB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+    { title: "Atomic Structure & Bonding", type: "PDF Notes", subject: "Chemistry", size: "3.5 MB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+    { title: "Thermodynamics Core Concepts", type: "Cheat Sheet", subject: "Physics", size: "1.5 MB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
   ];
 
+  const handleOpenViewer = (item) => {
+    setActivePdf(item);
+    if (user?.uid) {
+      // Award 2 points to the matching Subject for opening a material!
+      trackSubjectProgress(user.uid, item.subject, 2);
+    }
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-8">
+    <div className="flex-1 overflow-y-auto p-6 md:p-8 relative">
       <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
           <BookOpen className="text-primary" /> Study Materials
@@ -45,7 +59,11 @@ export default function StudyMaterials() {
             </CardHeader>
             <CardContent>
               <div className="flex gap-2">
-                <Button variant="outline" className="w-full bg-white/50 border-white/20 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10 transition-all font-semibold rounded-xl text-gray-700 dark:text-gray-200">
+                <Button 
+                  onClick={() => handleOpenViewer(item)} 
+                  variant="outline" 
+                  className="w-full bg-white/50 border-white/20 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10 transition-all font-semibold rounded-xl text-gray-700 dark:text-gray-200"
+                >
                   Open Viewer
                 </Button>
                 <Button variant="ghost" className="px-3 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300">
@@ -56,6 +74,14 @@ export default function StudyMaterials() {
           </Card>
         ))}
       </div>
+
+      {activePdf && (
+        <PDFViewerEngine 
+          url={activePdf.url} 
+          title={activePdf.title} 
+          onClose={() => setActivePdf(null)} 
+        />
+      )}
     </div>
   );
 }

@@ -17,7 +17,7 @@ import { useFirebase } from "@/Context/firebase";
 function App() {
   const location = useLocation();
   const { isLoggedIn } = useFirebase();
-  const hideNavbarRoutes = ["/Dashboard", "/dashboard"];
+  const hideNavbarRoutes = ["/Dashboard", "/dashboard", "/Materials", "/Flashcards", "/MockTests", "/Tutor"];
   const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname);
 
   return (
