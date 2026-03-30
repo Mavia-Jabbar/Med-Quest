@@ -9,6 +9,9 @@ import Pricing from "./pages/Pricing";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AuthRedirect from "@/components/AuthRedirect";
 import Dashboard from "./pages/Dashboard";
+import DashboardLayout from "@/components/DashboardLayout";
+import StudyMaterials from "./pages/StudyMaterials";
+import Flashcards from "./pages/Flashcards";
 import { useFirebase } from "@/Context/firebase";
 
 function App() {
@@ -55,10 +58,11 @@ function App() {
         <Route path="/Pricing" element={<Pricing />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/Dashboard" element={<Dashboard />} />
-          {/* <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          add more protected pages here */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/Dashboard" element={<Dashboard />} />
+            <Route path="/Materials" element={<StudyMaterials />} />
+            <Route path="/Flashcards" element={<Flashcards />} />
+          </Route>
         </Route>
       </Routes>
     </>
