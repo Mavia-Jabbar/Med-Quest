@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, FileText, ChevronRight, FolderOpen, Dna, Atom, Magnet, Info } from 'lucide-react';
-import PDFViewerEngine from '@/components/study/PDFViewerEngine';
-import CustomLoader from '@/components/ui/CustomLoader';
+import ScienceLoader from '@/components/ui/ScienceLoader';
 import MagneticButton from '@/components/ui/MagneticButton';
+import { Button } from '@/components/ui/button';
+import PDFViewerEngine from '@/components/study/PDFViewerEngine';
 import { useFirebase } from '@/Context/firebase';
 import { trackSubjectProgress } from '@/services/progressService';
 import { useMaterialsList } from '@/services/materialService';
@@ -100,7 +101,9 @@ export default function StudyMaterials() {
       </div>
 
       {loading ? (
-         <CustomLoader text="Fetching Cloud Blueprints..." />
+         <div className="flex flex-col items-center justify-center py-20 animate-in fade-in h-64">
+           <ScienceLoader text="Retrieving Syllabuses..." />
+         </div>
       ) : currentSubjectData?.units.length === 0 ? (
          <div className="flex flex-col items-center justify-center py-20 animate-in fade-in border border-dashed border-gray-300 dark:border-gray-700 rounded-3xl bg-white/30 dark:bg-black/20">
             <div className="w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-4 text-gray-400">
@@ -158,9 +161,8 @@ export default function StudyMaterials() {
                           <span className="text-xs text-gray-500 font-medium mb-5">{mat.size}</span>
                           
                           <MagneticButton 
-                            strength={20}
                             onClick={() => handleOpenViewer(mat, currentSubjectData.subject)} 
-                            className="w-full mt-auto bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md border-none rounded-xl font-bold transition-all p-3 hover:bg-black dark:hover:bg-gray-200"
+                            className="w-full mt-auto bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md rounded-xl font-bold py-2.5"
                           >
                             Open Viewer
                           </MagneticButton>

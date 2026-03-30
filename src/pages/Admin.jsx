@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { uploadMaterial, useMaterialsList, deleteMaterial } from '@/services/materialService';
 import { UploadCloud, CheckCircle2, Trash2, FileText, ArrowLeft } from 'lucide-react';
-import CustomLoader from '@/components/ui/CustomLoader';
-import MagneticButton from '@/components/ui/MagneticButton';
+import ScienceLoader from '@/components/ui/ScienceLoader';
 import { NavLink } from 'react-router';
 
 export default function Admin() {
@@ -141,14 +140,13 @@ export default function Admin() {
             />
           </div>
 
-          <MagneticButton 
-            strength={15}
+          <button 
             type="submit" 
             disabled={loading}
-            className="w-full py-4 mt-8 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold shadow-xl transition-all disabled:opacity-50 hover:bg-black dark:hover:bg-gray-200"
+            className="w-full py-4 mt-8 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold hover:scale-[1.02] shadow-xl transition-all disabled:opacity-50"
           >
             {loading ? "Deploying Code..." : "Publish to Firebase"}
-          </MagneticButton>
+          </button>
         </form>
       </div>
 
@@ -166,7 +164,9 @@ export default function Admin() {
         </div>
 
         {listLoading ? (
-            <CustomLoader text="Syncing Google Cloud..." />
+            <div className="w-full h-full flex items-center justify-center">
+               <ScienceLoader text="Syncing Firebase Cloud..." />
+            </div>
         ) : materialsList.length === 0 ? (
             <div className="w-full py-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl bg-white/30 dark:bg-black/20">
                <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />

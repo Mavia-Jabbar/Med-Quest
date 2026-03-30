@@ -1,27 +1,43 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function PageTransition({ children, className = "" }) {
-  const pageVariants = {
-    initial: { opacity: 0, y: 15, scale: 0.99 },
-    in: { opacity: 1, y: 0, scale: 1 },
-    out: { opacity: 0, y: -15, scale: 0.99 }
-  };
+const pageVariants = {
+  initial: {
+    opacity: 0,
+    y: 15,
+    scale: 0.98,
+    filter: "blur(8px)"
+  },
+  enter: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.5,
+      ease: [0.16, 1, 0.3, 1] // Apple-style spring ease
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    scale: 0.99,
+    filter: "blur(4px)",
+    transition: {
+      duration: 0.3,
+      ease: [0.16, 1, 0.3, 1]
+    }
+  }
+};
 
-  const pageTransition = {
-    type: "tween",
-    ease: "circOut",
-    duration: 0.5
-  };
-
+export default function PageTransition({ children }) {
   return (
     <motion.div
       initial="initial"
-      animate="in"
-      exit="out"
+      animate="enter"
+      exit="exit"
       variants={pageVariants}
-      transition={pageTransition}
-      className={`w-full h-full flex flex-col ${className}`}
+      className="flex-1 flex flex-col w-full h-full relative"
     >
       {children}
     </motion.div>

@@ -1,66 +1,75 @@
-import React, { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, useState } from "react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
-export default function HoverTiltCard({ children, className = "", tiltStrength = 15 }) {
+export default function HoverTiltCard({ children, className = "" }) {
   const ref = useRef(null);
-  const [rotateX, setRotateX] = useState(0);
-  const [rotateY, setRotateY] = useState(0);
-  const [glarePosition, setGlarePosition] = useState({ x: 50, y: 50, opacity: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Mouse tracking values
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Smooth springs for rotation
+  const springConfig = { damping: 20, stiffness: 150, mass: 0.8 };
+  const smoothX = useSpring(mouseX, springConfig);
+  const smoothY = useSpring(mouseY, springConfig);
+
+  // Map mouse position to rotation ranges (tilt intensity limit: 8 degrees)
+  const rotateX = useTransform(smoothY, [-0.5, 0.5], [8, -8]);
+  const rotateY = useTransform(smoothX, [-0.5, 0.5], [-8, 8]);
+
+  // Lighting effect moving across card surface
+  const lightX = useTransform(smoothX, [-0.5, 0.5], [0, 100]);
+  const lightY = useTransform(smoothY, [-0.5, 0.5], [0, 100]);
+  const lightingStyle = isHovered 
+    ? { backgroundImage: `radial-gradient(circle at ${lightX.get()}% ${lightY.get()}%, rgba(255,255,255,0.1) 0%, transparent 60%)` } 
+    : {};
 
   const handleMouseMove = (e) => {
     if (!ref.current) return;
-    
-    // Get card dimensions
     const rect = ref.current.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    
-    // Get mouse position relative to card
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    
-    // Calculate rotation (-1 to 1 multiplier) based on mouse percent
-    const xPct = (mouseX / width) - 0.5;
-    const yPct = (mouseY / height) - 0.5;
-    
-    // Max rotation is tiltStrength
-    setRotateX(yPct * -tiltStrength);
-    setRotateY(xPct * tiltStrength);
-
-    // Update Apple Glass Glare position
-    setGlarePosition({
-      x: (mouseX / width) * 100,
-      y: (mouseY / height) * 100,
-      opacity: 0.15
-    });
+    // Normalize coordinates between -0.5 and 0.5 based on card center
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
   };
 
+  const handleMouseEnter = () => setIsHovered(true);
+  
   const handleMouseLeave = () => {
-    setRotateX(0);
-    setRotateY(0);
-    setGlarePosition(prev => ({ ...prev, opacity: 0 }));
+    setIsHovered(false);
+    mouseX.set(0);
+    mouseY.set(0);
   };
 
   return (
     <motion.div
       ref={ref}
       onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      animate={{ rotateX, rotateY }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      style={{ perspective: 1000 }}
-      className={`relative transform-gpu ${className}`}
+      style={{
+        rotateX,
+        rotateY,
+        transformPerspective: 1000,
+        zIndex: isHovered ? 10 : 1,
+      }}
+      className={`relative w-full h-full preserve-3d transition-transform duration-200 ease-out will-change-transform ${className}`}
     >
-      {/* Target Content */}
-      {children}
-      
-      {/* 3D Glass Glare Lighting Effect */}
-      <motion.div 
-        className="pointer-events-none absolute inset-0 z-50 rounded-inherit transition-opacity duration-300"
+      {/* Visual content layer */}
+      <div className="w-full h-full relative z-10">
+         {children}
+      </div>
+
+      {/* Dynamic Glass Glare (Specular Highlight) */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-20 rounded-xl transition-opacity duration-300 mix-blend-overlay"
         style={{
-          background: `radial-gradient(circle at ${glarePosition.x}% ${glarePosition.y}%, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 60%)`,
-          opacity: glarePosition.opacity,
-          borderRadius: 'inherit'
+          opacity: isHovered ? 1 : 0,
+          background: isHovered 
+            ? `radial-gradient(circle at ${lightX.get()}% ${lightY.get()}%, rgba(255,255,255,0.2) 0%, transparent 50%)` 
+            : 'none'
         }}
       />
     </motion.div>
