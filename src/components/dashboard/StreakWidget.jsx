@@ -14,8 +14,13 @@ const QUOTES = [
 ];
 
 export default function StreakWidget({ currentStreak }) {
-  // Select a consistent random quote per render
-  const quote = React.useMemo(() => QUOTES[Math.floor(Math.random() * QUOTES.length)], []);
+  // Select a deterministic "Quote of the Day" based on the day of the year
+  const quote = React.useMemo(() => {
+    const start = new Date(new Date().getFullYear(), 0, 0);
+    const diff = new Date() - start;
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return QUOTES[dayOfYear % QUOTES.length];
+  }, []);
 
   // Limit cells to 7 for visual loop. If streak > 7, it stays maximum filled to reward the user!
   const activeCells = Math.min(currentStreak, 7);
