@@ -1,5 +1,5 @@
 import { db } from "@/Context/firebase";
-import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "firebase/firestore";
 import { useState, useEffect } from 'react';
 
 // Converts ugly Google Drive 'view?usp=sharing' link to a native iframe 'preview' link
@@ -24,6 +24,17 @@ export const uploadMaterial = async (materialData) => {
     return docRef.id;
   } catch (error) {
     console.error("Error adding document: ", error);
+    throw error;
+  }
+};
+
+// Instantly delete material from Cloud Database
+export const deleteMaterial = async (id) => {
+  try {
+    await deleteDoc(doc(db, "materials", id));
+    return true;
+  } catch (error) {
+    console.error("Error deleting document: ", error);
     throw error;
   }
 };

@@ -60,15 +60,19 @@ function App() {
         <Route path="/Pricing" element={<Pricing />} />
 
         <Route element={<ProtectedRoute />}>
+          
+          {/* Standalone Admin Interface */}
+          <Route element={<AdminRoute />}>
+            <Route path="/Admin" element={<Admin />} />
+          </Route>
+
+          {/* Student Dashboard Interface */}
           <Route element={<DashboardLayout />}>
             <Route path="/Dashboard" element={<Dashboard />} />
             <Route path="/Materials" element={<StudyMaterials />} />
             <Route path="/Flashcards" element={<Flashcards />} />
-            
-            <Route element={<AdminRoute />}>
-              <Route path="/Admin" element={<Admin />} />
-            </Route>
           </Route>
+
         </Route>
       </Routes>
     </>
