@@ -12,12 +12,13 @@ import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "@/components/DashboardLayout";
 import StudyMaterials from "./pages/StudyMaterials";
 import Flashcards from "./pages/Flashcards";
+import Admin from "./pages/Admin";
 import { useFirebase } from "@/Context/firebase";
 
 function App() {
   const location = useLocation();
   const { isLoggedIn } = useFirebase();
-  const hideNavbarRoutes = ["/Dashboard", "/dashboard", "/Materials", "/Flashcards", "/MockTests", "/Tutor"];
+  const hideNavbarRoutes = ["/Dashboard", "/dashboard", "/Materials", "/Flashcards", "/MockTests", "/Tutor", "/Admin"];
   const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname);
 
   return (
@@ -62,6 +63,7 @@ function App() {
             <Route path="/Dashboard" element={<Dashboard />} />
             <Route path="/Materials" element={<StudyMaterials />} />
             <Route path="/Flashcards" element={<Flashcards />} />
+            <Route path="/Admin" element={<Admin />} />
           </Route>
         </Route>
       </Routes>

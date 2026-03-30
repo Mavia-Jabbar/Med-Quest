@@ -1,7 +1,6 @@
 import { db } from "@/Context/firebase";
 import { doc, setDoc, increment, collection, onSnapshot, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { useEffect, useState } from "react";
 
 // Track when a user reads a PDF or flips a flashcard
 export const trackSubjectProgress = async (userId, subject, pointsToAdd = 1) => {
