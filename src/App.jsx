@@ -19,8 +19,10 @@ import { useFirebase } from "@/Context/firebase";
 function App() {
   const location = useLocation();
   const { isLoggedIn } = useFirebase();
-  const hideNavbarRoutes = ["/Dashboard", "/dashboard", "/Materials", "/Flashcards", "/MockTests", "/Tutor", "/Admin"];
-  const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname);
+  
+  // Convert current path and target paths to lowercase to catch cases like /admin or /Admin across Vercel deployments
+  const hideNavbarRoutes = ["/dashboard", "/materials", "/flashcards", "/mocktests", "/tutor", "/admin"];
+  const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname.toLowerCase());
 
   return (
     <>
