@@ -7,7 +7,7 @@ import MagneticButton from '@/components/ui/MagneticButton';
 import ReactMarkdown from 'react-markdown'; // Ensure this exists, or fallback to raw text if needed. For now, we will render raw text securely or rely on basic formatting.
 
 export default function Tutor() {
-  const { userData } = useFirebase();
+  const { user, userData } = useFirebase();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -16,14 +16,14 @@ export default function Tutor() {
   
   // Real-time listener for Firestore Chat History
   useEffect(() => {
-    if (!userData?.uid) return;
+    if (!user?.uid) return;
     
-    const unsubscribe = subscribeToChatHistory(userData.uid, (history) => {
+    const unsubscribe = subscribeToChatHistory(user.uid, (history) => {
       setMessages(history);
     });
 
     return () => unsubscribe();
-  }, [userData?.uid]);
+  }, [user?.uid]);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -40,9 +40,13 @@ export default function Tutor() {
     setError(null);
 
     try {
-      await askAITutor(userData.uid, userQuery, messages);
+      console.log("Asking AI Tutor...", { userQuery, historyLength: messages.length });
+      await askAITutor(user.uid, userQuery, messages);
+      console.log("AI Tutor Responded successfully.");
     } catch (err) {
-      setError(err.message || "The Gemini AI failed to respond. Check API keys.");
+      console.error("TUTOR ERROR UI CATCH:", err);
+      setError(err.message || "Failed to respond. Check API keys.");
+      alert(`AI Error: ${err.message || "Unknown error"}`);
     } finally {
       setIsTyping(false);
     }
@@ -127,8 +131,8 @@ export default function Tutor() {
          <div className="max-w-4xl mx-auto relative">
            
            {error && (
-             <div className="absolute -top-14 left-0 right-0 bg-red-100/90 dark:bg-red-900/90 backdrop-blur-md text-red-600 dark:text-red-200 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg animate-in slide-in-from-bottom-2">
-               <AlertCircle size={18} /> {error}
+             <div className="absolute bottom-20 left-0 right-0 bg-red-100/90 border-2 border-red-500 dark:bg-red-900/90 text-red-600 dark:text-red-200 px-6 py-4 rounded-xl text-lg font-bold flex items-center justify-center gap-2 shadow-2xl z-50">
+               <AlertCircle size={24} /> {error}
              </div>
            )}
 

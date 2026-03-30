@@ -24,12 +24,23 @@ export const subscribeToChatHistory = (userId, callback) => {
   if (!userId) return () => {};
 
   const messagesRef = collection(db, "users", userId, "chats");
-  // Order messages chronologically
-  const q = query(messagesRef, orderBy("timestamp", "asc"));
+  // Bypass native orderBy to prevent serverTimestamp 'null' exclusion during optimistic local writes
+  const q = query(messagesRef);
 
   return onSnapshot(q, (snapshot) => {
-    const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    let msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Sort chronologically in memory (fallback to Date.now() if timestamp is still pending from server)
+    msgs.sort((a, b) => {
+      const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : Date.now();
+      const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : Date.now();
+      return timeA - timeB;
+    });
+
+    console.log("Firestore onSnapshot synced! Message Count:", msgs.length);
     callback(msgs);
+  }, (error) => {
+    console.error("FIRESTORE LISTENER ERROR:", error);
   });
 };
 
@@ -67,20 +78,23 @@ export const askAITutor = async (userId, userMessage, chatHistory = []) => {
     }));
 
     // Start a Chat Session keeping recent context
+    console.log("Starting chat with formatted history length:", formattedHistory.length);
     const chatSession = model.startChat({
       history: formattedHistory,
     });
 
     // 3. Request completion from Gemini
+    console.log("Sending message to Gemini API...");
     const result = await chatSession.sendMessage(userMessage);
     const aiResponseText = result.response.text();
+    console.log("Received AI response successfully.");
 
     // 4. Save Gemini's answer to Firestore
     await appendChatMessage(userId, 'model', aiResponseText);
     
     return true;
   } catch (error) {
-    console.error("Gemini AI API Error:", error);
+    console.error("Gemini AI API CRITICAL Error:", error);
     throw error;
   }
 };
