@@ -51,12 +51,12 @@ export default function Admin() {
   };
 
   return (
-    <div className="w-full h-screen grid grid-cols-1 lg:grid-cols-[450px_1fr] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-black overflow-hidden font-sans">
+    <div className="w-full min-h-screen lg:h-screen flex flex-col lg:grid lg:grid-cols-[450px_1fr] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-black overflow-x-hidden font-sans">
       
       {/* ⚠️ LEFT PANEL: Injector Form */}
-      <div className="h-full overflow-y-auto p-8 lg:p-10 border-r border-black/5 dark:border-white/5 bg-white/60 dark:bg-black/60 backdrop-blur-3xl flex flex-col relative z-20 shadow-xl shadow-black/5">
+      <div className="w-full lg:h-full lg:overflow-y-auto p-6 md:p-10 border-b lg:border-b-0 lg:border-r border-black/5 dark:border-white/5 bg-white/60 dark:bg-black/60 backdrop-blur-3xl flex flex-col relative z-20 shadow-xl shadow-black/5">
         
-        <NavLink to="/Dashboard" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary transition-colors mb-10 w-max">
+        <NavLink to="/Dashboard" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary transition-colors mb-8 lg:mb-10 w-max">
            <ArrowLeft size={16} /> Return to Dashboard
         </NavLink>
 
@@ -150,7 +150,7 @@ export default function Admin() {
       </div>
 
       {/* ⚠️ RIGHT PANEL: Live Database View */}
-      <div className="h-full overflow-y-auto p-8 lg:p-12 relative z-10">
+      <div className="flex-1 lg:h-full lg:overflow-y-auto p-6 md:p-8 lg:p-12 relative z-10 w-full min-h-[500px]">
         
         <div className="flex items-center justify-between mb-8">
            <div>

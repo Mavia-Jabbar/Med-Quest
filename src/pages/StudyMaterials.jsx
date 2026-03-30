@@ -66,15 +66,15 @@ export default function StudyMaterials() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-8 relative">
+    <div className="flex-1 w-full overflow-y-auto p-4 sm:p-6 md:p-8 relative">
       
       {/* Header */}
-      <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="mb-6 md:mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
-            <BookOpen className="text-primary" /> Syllabus Library
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
+            <BookOpen className="text-primary flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8" /> Syllabus Library
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm font-medium">
+          <p className="text-gray-500 dark:text-gray-400 mt-2 text-xs sm:text-sm font-medium">
             Navigate the complete MDCAT syllabus dynamically loaded from the cloud.
           </p>
         </div>
@@ -122,21 +122,21 @@ export default function StudyMaterials() {
                 {/* Accordion Header */}
                 <button 
                   onClick={() => toggleUnit(unit.id)}
-                  className="w-full flex items-center justify-between p-5 text-left transition-colors hover:bg-white/50 dark:hover:bg-white/5"
+                  className="w-full flex items-center justify-between p-4 sm:p-5 text-left transition-colors hover:bg-white/50 dark:hover:bg-white/5"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-2xl flex-shrink-0 transition-colors ${isExpanded ? 'bg-primary/10 text-primary' : 'bg-gray-100 dark:bg-black/50 text-gray-500'}`}>
-                      {isExpanded ? <FolderOpen className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
+                  <div className="flex items-center gap-3 sm:gap-4 pr-4">
+                    <div className={`p-2.5 sm:p-3 rounded-2xl flex-shrink-0 transition-colors hidden sm:flex ${isExpanded ? 'bg-primary/10 text-primary' : 'bg-gray-100 dark:bg-black/50 text-gray-500'}`}>
+                      {isExpanded ? <FolderOpen className="w-5 h-5 sm:w-6 sm:h-6" /> : <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />}
                     </div>
-                    <div>
-                      <h3 className={`text-lg font-bold transition-colors ${isExpanded ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white'}`}>
+                    <div className="min-w-0">
+                      <h3 className={`text-base sm:text-lg font-bold truncate transition-colors ${isExpanded ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white'}`}>
                         {unit.title}
                       </h3>
-                      <p className="text-sm text-gray-500 font-medium mt-0.5">{unit.description}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 font-medium mt-0.5 truncate">{unit.description}</p>
                     </div>
                   </div>
-                  <div className={`p-2 rounded-full transition-transform duration-300 ease-in-out ${isExpanded ? 'rotate-90 bg-gray-100 dark:bg-white/10' : 'bg-transparent text-gray-400'}`}>
-                    <ChevronRight className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  <div className={`p-1.5 sm:p-2 flex-shrink-0 rounded-full transition-transform duration-300 ease-in-out ${isExpanded ? 'rotate-90 bg-gray-100 dark:bg-white/10' : 'bg-transparent text-gray-400'}`}>
+                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400" />
                   </div>
                 </button>
 
