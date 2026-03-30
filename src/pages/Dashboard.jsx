@@ -4,14 +4,13 @@ import { Flame } from 'lucide-react';
 import StreakWidget from '@/components/dashboard/StreakWidget';
 import MasteryWidget from '@/components/dashboard/MasteryWidget';
 import QuickActions from '@/components/dashboard/QuickActions';
-import { useSubjectProgress } from '@/services/progressService';
+import { useSubjectProgress, useStreak } from '@/services/progressService';
 
 const Dashboard = () => {
   const { userData, user } = useFirebase();
   const userName = userData?.name || "Student";
   const progressData = useSubjectProgress(user?.uid);
-  
-  const currentStreak = 14; // Streak algo mocked for now
+  const currentStreak = useStreak(user?.uid);
   
   // Transform real progress data into UI format
   // Fallback to 0 if subject not studied yet

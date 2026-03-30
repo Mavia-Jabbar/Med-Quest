@@ -1,12 +1,13 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function PDFViewerEngine({ url, title, onClose }) {
   if (!url) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+  const modalContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <div className="relative w-full max-w-6xl h-[90vh] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-500">
         
         {/* Top Control Bar */}
@@ -39,4 +40,7 @@ export default function PDFViewerEngine({ url, title, onClose }) {
       </div>
     </div>
   );
+
+  // Use Portal so the Viewer escapes ALL z-index and overflow contexts from DashboardLayout
+  return createPortal(modalContent, document.body);
 }
