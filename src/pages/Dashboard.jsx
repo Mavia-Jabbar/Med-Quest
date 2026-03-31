@@ -26,19 +26,19 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-8">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
       
       {/* Animated Greeting Header */}
-      <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 flex items-center justify-between">
+      <div className="mb-6 md:mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
             Ready to study, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">{userName}</span>? 🩺
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm font-medium">
+          <p className="text-gray-500 dark:text-gray-400 mt-1.5 text-xs sm:text-sm font-medium">
             Here's a breakdown of your current MDCAT preparation.
           </p>
         </div>
-        <div className="md:hidden flex items-center gap-2 bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 rounded-full border border-orange-200 dark:border-orange-500/20">
+        <div className="md:hidden flex items-center gap-2 bg-orange-50 dark:bg-orange-500/10 px-2.5 py-1.5 rounded-full border border-orange-200 dark:border-orange-500/20">
           <Flame className="w-4 h-4 text-orange-500" />
           <span className="text-sm font-bold text-orange-600 dark:text-orange-400">{currentStreak}</span>
         </div>

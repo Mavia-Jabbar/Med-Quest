@@ -19,16 +19,16 @@ export const Navbar1 = () => {
   const subTextClass = isHome && !isLightBg ? "text-gray-200" : "text-gray-600 dark:text-gray-300";
 
   return (
-    <div className="sticky top-4 z-50 flex justify-center px-4 md:px-8 w-full transition-all">
-      <header className={`w-full max-w-6xl rounded-2xl border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-colors duration-700 ${isHome && !isLightBg ? 'border-white/20 bg-white/10' : 'border-white/40 dark:border-white/10 bg-gray-400/20 dark:bg-gray-800/30'}`}>
-        <div className="px-5 md:px-6 h-16 flex items-center justify-between">
+    <div className="sticky top-0 md:top-4 z-50 flex justify-center px-0 md:px-6 w-full transition-all">
+      <header className={`w-full md:max-w-6xl md:rounded-2xl border-b md:border backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-colors duration-700 ${isHome && !isLightBg ? 'border-white/20 bg-white/10 md:border-white/20' : 'border-white/40 dark:border-white/10 bg-white/80 dark:bg-gray-900/80 md:bg-gray-400/20 md:dark:bg-gray-800/30'}`}>
+        <div className="px-3 sm:px-5 md:px-6 h-14 md:h-16 flex items-center justify-between gap-2">
           
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-lg shadow-green-500/20 group-hover:scale-105 transition-transform border border-black/5 dark:border-white/10 relative">
+          <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl overflow-hidden shadow-lg shadow-green-500/20 group-hover:scale-105 transition-transform border border-black/5 dark:border-white/10">
               <img src={appLogo} alt="MedQuest" className="w-full h-full object-cover scale-[1.1]" />
             </div>
-            <span className={`text-xl font-black tracking-tight transition-colors duration-700 ${textClass}`}>{siteConfig.abbreviation}</span>
+            <span className={`text-lg md:text-xl font-black tracking-tight transition-colors duration-700 ${textClass}`}>{siteConfig.abbreviation}</span>
           </Link>
 
           {/* Desktop Links */}

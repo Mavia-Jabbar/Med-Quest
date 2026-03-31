@@ -84,15 +84,15 @@ export default function MockTests() {
   
   if (view === 'menu') {
     return (
-      <div className="flex-1 w-full overflow-y-auto p-6 md:p-12 relative animate-in fade-in zoom-in-95 duration-700">
-        <div className="max-w-4xl mx-auto space-y-12">
+      <div className="flex-1 w-full overflow-y-auto p-4 sm:p-6 md:p-10 relative animate-in fade-in zoom-in-95 duration-700">
+        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
           
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-3xl flex items-center justify-center mx-auto shadow-lg shadow-blue-500/20">
-              <BrainCircuit className="w-8 h-8" />
+          <div className="text-center space-y-3 sm:space-y-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto shadow-lg shadow-blue-500/20">
+              <BrainCircuit className="w-6 h-6 sm:w-8 sm:h-8" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight">Assessment Engine</h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto font-medium">Select a highly-calibrated MDCAT subject test. Your time is restricted and your score will instantly update your Dashboard Gamification Mastery.</p>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight">Assessment Engine</h1>
+            <p className="text-sm sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium">Select a highly-calibrated MDCAT subject test. Your time is restricted and your score will instantly update your Dashboard Mastery.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -129,14 +129,14 @@ export default function MockTests() {
     return (
       <div className="flex-1 w-full flex flex-col h-full bg-white dark:bg-[#09090b] animate-in slide-in-from-bottom-8 duration-700">
         {/* Exam Header */}
-        <header className="h-20 border-b border-gray-200 dark:border-white/10 px-8 flex flex-col sm:flex-row items-center justify-between shrink-0 bg-gray-50 dark:bg-black/50 backdrop-blur-md z-10 w-full gap-4">
+        <header className="min-h-14 border-b border-gray-200 dark:border-white/10 px-3 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 bg-gray-50 dark:bg-black/50 backdrop-blur-md z-10 w-full gap-2 py-3 sm:py-0">
            <div>
-             <h2 className="text-lg font-bold text-gray-900 dark:text-white">{activeTest.title}</h2>
-             <p className="text-sm font-semibold text-gray-500 tracking-wide uppercase">Question {currentQuestionIdx + 1} of {activeTest.questions.length}</p>
+             <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">{activeTest.title}</h2>
+             <p className="text-xs sm:text-sm font-semibold text-gray-500 tracking-wide uppercase">Question {currentQuestionIdx + 1} of {activeTest.questions.length}</p>
            </div>
            
-           <div className={`flex items-center gap-3 px-5 py-2.5 rounded-full font-bold tracking-widest text-lg shadow-sm border ${timeLeft < 300 ? 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:border-red-500/30' : 'bg-white dark:bg-white/10 text-gray-800 dark:text-white border-black/5 dark:border-white/5'}`}>
-             <Clock className={timeLeft < 300 ? "animate-pulse" : ""} size={20} />
+           <div className={`flex items-center gap-2 px-3 sm:px-5 py-2 rounded-full font-bold tracking-widest text-base sm:text-lg shadow-sm border self-end sm:self-auto ${timeLeft < 300 ? 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:border-red-500/30' : 'bg-white dark:bg-white/10 text-gray-800 dark:text-white border-black/5 dark:border-white/5'}`}>
+             <Clock className={timeLeft < 300 ? "animate-pulse" : ""} size={18} />
              {formatTime(timeLeft)}
            </div>
         </header>
@@ -145,32 +145,32 @@ export default function MockTests() {
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full">
            
            {/* LEFT Pane: MCQ Canvas */}
-           <div className="flex-1 overflow-y-auto p-6 md:p-12 relative">
+           <div className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-10 relative">
              <div className="max-w-3xl mx-auto">
                
                {/* The Question */}
-               <h3 className="text-2xl md:text-3xl font-medium leading-tight text-gray-900 dark:text-white mb-10 pb-6 border-b border-black/5 dark:border-white/5">
+               <h3 className="text-lg sm:text-2xl md:text-3xl font-medium leading-tight text-gray-900 dark:text-white mb-6 sm:mb-10 pb-4 sm:pb-6 border-b border-black/5 dark:border-white/5">
                  {q.text}
                </h3>
 
                {/* The Options */}
-               <div className="space-y-4">
+               <div className="space-y-3">
                  {q.options.map((optionText, idx) => {
                    const isSelected = answers[currentQuestionIdx] === idx;
                    return (
                      <button 
                        key={idx}
                        onClick={() => handleSelectAnswer(idx)}
-                       className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-300 flex items-center gap-5 ${
+                       className={`w-full text-left p-3 sm:p-5 rounded-2xl border-2 transition-all duration-300 flex items-center gap-3 sm:gap-5 ${
                          isSelected 
                           ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(79,70,229,0.15)] scale-[1.01]' 
                           : 'border-transparent bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 hover:border-black/5 dark:hover:border-white/10'
                        }`}
                      >
-                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${isSelected ? 'bg-primary text-white' : 'bg-white dark:bg-black text-gray-500 shadow-sm border border-black/5 dark:border-white/10'}`}>
-                         {String.fromCharCode(65 + idx)} {/* A, B, C, D */}
+                       <div className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-colors ${isSelected ? 'bg-primary text-white' : 'bg-white dark:bg-black text-gray-500 shadow-sm border border-black/5 dark:border-white/10'}`}>
+                         {String.fromCharCode(65 + idx)}
                        </div>
-                       <span className={`text-lg font-medium ${isSelected ? 'text-gray-900 dark:text-white' : ''}`}>{optionText}</span>
+                       <span className={`text-sm sm:text-base font-medium ${isSelected ? 'text-gray-900 dark:text-white' : ''}`}>{optionText}</span>
                      </button>
                    );
                  })}

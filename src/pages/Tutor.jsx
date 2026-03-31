@@ -61,34 +61,34 @@ export default function Tutor() {
     <div className="flex-1 w-full h-[calc(100vh-80px)] md:h-full flex flex-col bg-white dark:bg-[#09090b] relative animate-in fade-in duration-700">
       
       {/* Tutor Header */}
-      <header className="h-20 shrink-0 border-b border-black/5 dark:border-white/10 px-8 flex items-center justify-between bg-white/80 dark:bg-black/50 backdrop-blur-xl z-20">
-         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-sm">
-               <BrainCircuit size={24} />
+      <header className="h-16 shrink-0 border-b border-black/5 dark:border-white/10 px-3 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-black/50 backdrop-blur-xl z-20">
+         <div className="flex items-center gap-3">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-sm flex-shrink-0">
+               <BrainCircuit size={20} />
             </div>
             <div>
-               <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">Gemini Medical Tutor <Sparkles size={16} className="text-yellow-500 fill-yellow-500" /></h1>
-               <p className="text-sm font-medium text-green-500 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online and Ready</p>
+               <h1 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">Gemini Medical Tutor <Sparkles size={14} className="text-yellow-500 fill-yellow-500" /></h1>
+               <p className="text-xs sm:text-sm font-medium text-green-500 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online and Ready</p>
             </div>
          </div>
       </header>
 
       {/* Main Chat Feed */}
-      <div className="flex-1 overflow-y-auto w-full relative p-6 md:p-10 space-y-8 bg-gradient-to-br from-purple-50/30 via-transparent to-pink-50/30 dark:from-purple-950/20 dark:to-transparent">
+      <div className="flex-1 overflow-y-auto w-full relative p-3 sm:p-6 md:p-8 space-y-4 sm:space-y-6 bg-gradient-to-br from-purple-50/30 via-transparent to-pink-50/30 dark:from-purple-950/20 dark:to-transparent">
          
          {messages.length === 0 && !isTyping && (
-           <div className="h-full w-full flex flex-col items-center justify-center animate-in zoom-in-95 duration-700 pb-20">
-              <div className="w-24 h-24 mb-8 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center text-purple-500">
-                 <BrainCircuit size={48} />
+           <div className="h-full w-full flex flex-col items-center justify-center animate-in zoom-in-95 duration-700 pb-10 px-2">
+              <div className="w-16 h-16 sm:w-24 sm:h-24 mb-4 sm:mb-8 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center text-purple-500">
+                 <BrainCircuit size={36} />
               </div>
-              <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-4 text-center">Hello, Dr. {userData?.name || 'Student'}.</h2>
-              <p className="text-lg text-gray-500 font-medium text-center max-w-xl mb-12 relative z-10">I am the MedQuest Gemini Advanced Intelligence. I have memorized every medical syllabus. What concept should we break down today?</p>
+              <h2 className="text-xl sm:text-3xl font-black text-gray-900 dark:text-white mb-3 text-center">Hello, Dr. {userData?.name || 'Student'}.</h2>
+              <p className="text-sm sm:text-lg text-gray-500 font-medium text-center max-w-xl mb-6 sm:mb-12 relative z-10">I am the MedQuest Gemini Advanced Intelligence. I have memorized every medical syllabus. What concept should we break down today?</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl">
-                {['Explain Meiosis vs Mitosis', 'How do I calculate pH?', 'What is Newton\'s 3rd Law?'].map((q, i) => (
-                  <button key={i} onClick={() => handleQuickPrompt(q)} className="p-4 bg-white/80 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl text-left hover:-translate-y-1 hover:shadow-lg transition-all duration-300 group shadow-sm backdrop-blur-md">
-                    <Sparkles size={16} className="text-primary mb-3 opacity-50 group-hover:opacity-100" />
-                    <span className="font-semibold text-gray-700 dark:text-gray-300 block">{q}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-3xl">
+                {['Explain Meiosis vs Mitosis', 'How do I calculate pH?', "What is Newton's 3rd Law?"].map((q, i) => (
+                  <button key={i} onClick={() => handleQuickPrompt(q)} className="p-3 sm:p-4 bg-white/80 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl text-left hover:-translate-y-1 hover:shadow-lg transition-all duration-300 group shadow-sm backdrop-blur-md">
+                    <Sparkles size={14} className="text-primary mb-2 opacity-50 group-hover:opacity-100" />
+                    <span className="font-semibold text-sm text-gray-700 dark:text-gray-300 block">{q}</span>
                   </button>
                 ))}
               </div>
