@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router';
 import { useFirebase } from '@/Context/firebase';
 import { siteConfig } from '@/config/site';
 import { LayoutDashboard, BookOpen, Activity, Layers, BrainCircuit, LogOut, X } from 'lucide-react';
+import appLogo from "@/assets/logo.jpeg";
 
 export default function Sidebar({ isOpen, setIsOpen }) {
   const { signOutUser } = useFirebase();
@@ -31,11 +32,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         <div>
           {/* Brand */}
           <div className="h-16 flex items-center justify-between px-6 border-b border-white/20 dark:border-white/10">
-            <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold mr-3 shadow-lg shadow-blue-500/30">
-                {siteConfig.abbreviation.charAt(0)}
+            <div className="flex items-center gap-3 w-full pl-2">
+              <div className="w-9 h-9 shrink-0 rounded-xl overflow-hidden shadow-md shadow-green-500/20 border border-black/5 dark:border-white/10 relative">
+                <img src={appLogo} alt="MedQuest" className="w-full h-full object-cover scale-[1.1]" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">{siteConfig.abbreviation}</span>
+              <span className="text-xl font-black tracking-tight text-gray-900 dark:text-white truncate">{siteConfig.abbreviation}</span>
             </div>
             
             {/* Mobile Close Button */}

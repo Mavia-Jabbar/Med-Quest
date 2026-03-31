@@ -4,6 +4,7 @@ import { useFirebase } from "@/Context/firebase";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
 import { navLinks } from "@/config/nav";
+import appLogo from "@/assets/logo.jpeg";
 
 export const Navbar1 = () => {
   const { isLoggedIn, user, signOutUser } = useFirebase();
@@ -14,11 +15,11 @@ export const Navbar1 = () => {
         <div className="px-5 md:px-6 h-16 flex items-center justify-between">
           
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform">
-              {siteConfig.abbreviation.charAt(0)}
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-lg shadow-green-500/20 group-hover:scale-105 transition-transform border border-black/5 dark:border-white/10 relative">
+              <img src={appLogo} alt="MedQuest" className="w-full h-full object-cover scale-[1.1]" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">{siteConfig.abbreviation}</span>
+            <span className="text-xl font-black tracking-tight text-gray-900 dark:text-white">{siteConfig.abbreviation}</span>
           </Link>
 
           {/* Desktop Links */}
