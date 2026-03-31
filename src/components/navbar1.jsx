@@ -22,16 +22,16 @@ export const Navbar1 = () => {
 
   // Glass bg adapts to video on home, solid on other pages
   const headerBg = isHome && !isLightBg
-    ? "bg-black/30 border-white/10"
-    : "bg-white/70 dark:bg-gray-900/70 border-white/40 dark:border-white/10";
+    ? "bg-white/5 border-white/15"
+    : "bg-white/10 dark:bg-black/20 border-white/30 dark:border-white/10";
 
   // Close mobile menu on route change
   React.useEffect(() => setMobileOpen(false), [location.pathname]);
 
   return (
-    <div className="sticky top-0 z-50 w-full">
-      <div className={`w-full backdrop-blur-2xl border-b shadow-sm transition-colors duration-700 ${headerBg}`}>
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+    <div className="sticky top-3 z-50 w-full px-3 sm:px-4">
+      <div className={`w-full max-w-7xl mx-auto rounded-2xl backdrop-blur-2xl border shadow-lg shadow-black/5 transition-colors duration-700 ${headerBg}`}>
+        <div className="w-full px-4 sm:px-5 h-13 flex items-center justify-between gap-3" style={{height: '52px'}}>
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
@@ -105,9 +105,9 @@ export const Navbar1 = () => {
 
       {/* Mobile Dropdown Menu */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${mobileOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out px-3 sm:px-4 ${mobileOpen ? "max-h-96 opacity-100 mt-2" : "max-h-0 opacity-0"}`}
       >
-        <div className={`w-full backdrop-blur-2xl border-b px-4 py-4 flex flex-col gap-1 transition-colors duration-700 ${isHome && !isLightBg ? "bg-black/40 border-white/10" : "bg-white/90 dark:bg-gray-900/90 border-white/40 dark:border-white/10"}`}>
+        <div className={`w-full max-w-7xl mx-auto rounded-2xl backdrop-blur-2xl border px-4 py-4 flex flex-col gap-1 shadow-lg shadow-black/5 transition-colors duration-700 ${isHome && !isLightBg ? "bg-white/5 border-white/15" : "bg-white/10 dark:bg-black/20 border-white/30 dark:border-white/10"}`}>
           {navLinks.map((link) => (
             <NavLink
               key={link.href}
