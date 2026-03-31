@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
@@ -7,26 +7,43 @@ import video1 from "@/assets/bg-video-1.mp4";
 import video2 from "@/assets/bg-video-2.mp4";
 
 export default function Home() {
-  const [currentVideo, setCurrentVideo] = useState(0);
+  const [videoIndex, setVideoIndex] = useState(0);
+  const loopCount = useRef(0);
+  const videoRef = useRef(null);
+  
   const videos = [video1, video2];
+
+  const handleVideoEnd = () => {
+    loopCount.current += 1;
+    if (loopCount.current >= 5) {
+      loopCount.current = 0;
+      setVideoIndex(prev => (prev + 1) % videos.length);
+    } else {
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.play();
+      }
+    }
+  };
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-80px)] text-center px-4 w-full overflow-hidden">
       
       {/* Background Video Playlist Engine */}
       <video 
-        key={currentVideo}
+        ref={videoRef}
+        key={videoIndex}
         autoPlay 
         muted 
         playsInline
-        onEnded={() => setCurrentVideo(prev => (prev + 1) % videos.length)}
-        className="fixed top-0 left-0 w-full h-[100vh] object-cover opacity-25 dark:opacity-30 pointer-events-none -z-20 mix-blend-luminosity dark:mix-blend-screen"
+        onEnded={handleVideoEnd}
+        className="fixed top-0 left-0 w-full h-[100vh] object-cover opacity-60 dark:opacity-50 pointer-events-none -z-20"
       >
-        <source src={videos[currentVideo]} type="video/mp4" />
+        <source src={videos[videoIndex]} type="video/mp4" />
       </video>
 
       {/* Cinematic Contrast Overlay */}
-      <div className="fixed top-0 left-0 w-full h-[100vh] bg-gradient-to-b from-white/60 via-white/80 to-white/95 dark:from-black/50 dark:via-black/80 dark:to-[#09090b] backdrop-blur-[1px] pointer-events-none -z-10" />
+      <div className="fixed top-0 left-0 w-full h-[100vh] bg-gradient-to-b from-white/30 via-white/50 to-white/90 dark:from-black/40 dark:via-black/60 dark:to-[#09090b] pointer-events-none -z-10" />
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000 max-w-3xl relative z-10">
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-gray-900 dark:text-white mb-6">
