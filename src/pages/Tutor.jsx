@@ -82,7 +82,7 @@ export default function Tutor() {
                  <BrainCircuit size={48} />
               </div>
               <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-4 text-center">Hello, Dr. {userData?.name || 'Student'}.</h2>
-              <p className="text-lg text-gray-500 font-medium text-center max-w-xl mb-12 relative z-10">I am the Med-Quest Gemini Advanced Intelligence. I have memorized every medical syllabus. What concept should we break down today?</p>
+              <p className="text-lg text-gray-500 font-medium text-center max-w-xl mb-12 relative z-10">I am the MedQuest Gemini Advanced Intelligence. I have memorized every medical syllabus. What concept should we break down today?</p>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl">
                 {['Explain Meiosis vs Mitosis', 'How do I calculate pH?', 'What is Newton\'s 3rd Law?'].map((q, i) => (
