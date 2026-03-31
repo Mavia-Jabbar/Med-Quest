@@ -84,8 +84,8 @@ export default function MockTests() {
   
   if (view === 'menu') {
     return (
-      <div className="flex-1 w-full overflow-y-auto p-4 sm:p-6 md:p-10 relative animate-in fade-in zoom-in-95 duration-700">
-        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
+      <div className="flex-1 w-full overflow-y-auto p-4 sm:p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-700">
+        <div className="space-y-8 sm:space-y-12">
           
           <div className="text-center space-y-3 sm:space-y-4">
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto shadow-lg shadow-blue-500/20">

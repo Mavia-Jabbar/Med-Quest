@@ -10,11 +10,20 @@ export default function DashboardLayout() {
   const location = useLocation();
 
   return (
-    <div className="flex h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-950 dark:to-slate-900 overflow-hidden font-sans">
-      <Sidebar isOpen={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
-      <main className="flex-1 flex flex-col relative z-10 w-full overflow-hidden">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-950 dark:to-slate-900 font-sans">
+      {/* Sidebar: on mobile it's a fixed overlay (width=0 impact), on md+ it's a static column */}
+      <div className="hidden md:flex md:w-64 shrink-0 h-full">
+        <Sidebar isOpen={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
+      </div>
+      {/* Mobile Sidebar as full overlay */}
+      <div className="md:hidden">
+        <Sidebar isOpen={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
+      </div>
+
+      {/* Main Content - always takes 100% remaining width */}
+      <main className="flex-1 flex flex-col w-0 min-w-0 h-full overflow-hidden">
         <DashboardHeader toggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
-        <div className="flex-1 overflow-hidden relative w-full h-full"> 
+        <div className="flex-1 overflow-hidden relative w-full h-full">
           <AnimatePresence mode="wait">
             <PageTransition key={location.pathname}>
               <Outlet />
