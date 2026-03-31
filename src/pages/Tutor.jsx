@@ -4,7 +4,8 @@ import { subscribeToChatHistory, askAITutor } from '@/services/aiTutorService';
 import { BrainCircuit, Send, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 import ScienceLoader from '@/components/ui/ScienceLoader';
 import MagneticButton from '@/components/ui/MagneticButton';
-import ReactMarkdown from 'react-markdown'; // Ensure this exists, or fallback to raw text if needed. For now, we will render raw text securely or rely on basic formatting.
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function Tutor() {
   const { user, userData } = useFirebase();
@@ -98,16 +99,27 @@ export default function Tutor() {
            const isModel = msg.role === 'model';
            return (
              <div key={msg.id || idx} className={`flex w-full ${isModel ? 'justify-start' : 'justify-end'} animate-in slide-in-from-bottom-4 duration-500`}>
-               <div className={`max-w-[85%] md:max-w-[70%] rounded-3xl p-5 ${isModel ? 'bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-gray-800 dark:text-gray-200 rounded-tl-sm' : 'bg-primary text-white shadow-xl shadow-primary/20 rounded-tr-sm'}`}>
+               <div className={`max-w-[90%] md:max-w-[80%] rounded-2xl p-4 md:p-5 text-left ${
+                 isModel 
+                   ? 'bg-white/90 dark:bg-[#111113]/90 backdrop-blur-3xl border border-black/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.8)] text-gray-800 dark:text-gray-200 rounded-tl-sm' 
+                   : 'bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-xl shadow-indigo-500/20 rounded-tr-sm border-0'
+               }`}>
                   {isModel && (
-                    <div className="flex items-center gap-2 mb-3 text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                       <Sparkles size={14} /> AI Tutor
+                    <div className="flex items-center gap-2 mb-4 text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 border-b border-black/5 dark:border-white/5 pb-3">
+                       <Sparkles size={16} className="fill-indigo-600 dark:fill-indigo-400" /> AI Medical Tutor
                     </div>
                   )}
-                  {/* Since ReactMarkdown requires another package, we'll cleanly render raw text with whitespace preservation */}
-                  <div className="whitespace-pre-wrap leading-relaxed font-medium font-sans">
-                     {msg.text}
-                  </div>
+                  {isModel ? (
+                    <div className="prose prose-sm md:prose-base dark:prose-invert prose-indigo prose-headings:font-bold prose-headings:tracking-tight prose-p:leading-relaxed prose-a:text-indigo-500 max-w-none text-left">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.text}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap leading-relaxed font-semibold text-[15px] md:text-base text-left">
+                       {msg.text}
+                    </div>
+                  )}
                </div>
              </div>
            );
