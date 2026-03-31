@@ -4,13 +4,16 @@ import "./index.css";
 import App from "./App.jsx";
 import { FirebaseProvider } from "./Context/firebase";
 import { BrowserRouter } from "react-router";
+import { VideoThemeProvider } from "./Context/VideoThemeContext";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <FirebaseProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <VideoThemeProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </VideoThemeProvider>
     </FirebaseProvider>
   </StrictMode>,
 );

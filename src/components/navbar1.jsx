@@ -5,13 +5,22 @@ import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
 import { navLinks } from "@/config/nav";
 import appLogo from "@/assets/logo.jpeg";
+import { useVideoTheme } from "@/Context/VideoThemeContext";
+import { useLocation } from "react-router";
 
 export const Navbar1 = () => {
   const { isLoggedIn, user, signOutUser } = useFirebase();
+  const { videoIndex } = useVideoTheme();
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+  // On home: videoIndex 0 = light bg → dark text; videoIndex 1 = dark bg → light text
+  const isLightBg = videoIndex === 0;
+  const textClass = isHome && !isLightBg ? "text-white" : "text-gray-900 dark:text-white";
+  const subTextClass = isHome && !isLightBg ? "text-gray-200" : "text-gray-600 dark:text-gray-300";
 
   return (
     <div className="sticky top-4 z-50 flex justify-center px-4 md:px-8 w-full transition-all">
-      <header className="w-full max-w-6xl rounded-2xl border border-white/40 dark:border-white/10 bg-gray-400/20 dark:bg-gray-800/30 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
+      <header className={`w-full max-w-6xl rounded-2xl border backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-colors duration-700 ${isHome && !isLightBg ? 'border-white/20 bg-white/10' : 'border-white/40 dark:border-white/10 bg-gray-400/20 dark:bg-gray-800/30'}`}>
         <div className="px-5 md:px-6 h-16 flex items-center justify-between">
           
           {/* Logo */}
@@ -19,7 +28,7 @@ export const Navbar1 = () => {
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-lg shadow-green-500/20 group-hover:scale-105 transition-transform border border-black/5 dark:border-white/10 relative">
               <img src={appLogo} alt="MedQuest" className="w-full h-full object-cover scale-[1.1]" />
             </div>
-            <span className="text-xl font-black tracking-tight text-gray-900 dark:text-white">{siteConfig.abbreviation}</span>
+            <span className={`text-xl font-black tracking-tight transition-colors duration-700 ${textClass}`}>{siteConfig.abbreviation}</span>
           </Link>
 
           {/* Desktop Links */}
@@ -28,7 +37,7 @@ export const Navbar1 = () => {
               <NavLink 
                 key={link.href} 
                 to={link.href} 
-                className={({isActive}) => `text-sm font-medium transition-colors hover:text-primary ${isActive ? "text-primary font-semibold" : "text-gray-600 dark:text-gray-300"}`}
+                className={({isActive}) => `text-sm font-medium transition-colors hover:text-primary ${isActive ? "text-primary font-semibold" : subTextClass}`}
               >
                 {link.title}
               </NavLink>
