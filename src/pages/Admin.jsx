@@ -1,8 +1,40 @@
 import React, { useState } from 'react';
 import { uploadMaterial, useMaterialsList, deleteMaterial } from '@/services/materialService';
-import { UploadCloud, CheckCircle2, Trash2, FileText, ArrowLeft } from 'lucide-react';
+import { UploadCloud, CheckCircle2, Trash2, FileText, ArrowLeft, ScrollText, ClipboardList, FileQuestion, LayoutList } from 'lucide-react';
 import ScienceLoader from '@/components/ui/ScienceLoader';
 import { NavLink } from 'react-router';
+
+// Category → sub-types mapping (mirrors StudyMaterials filter logic)
+const CATEGORIES = [
+  {
+    label: 'Notes',
+    value: 'notes',
+    color: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-500/30',
+    icon: <ScrollText size={16} />,
+    types: ['PDF Notes', 'Handwritten Notes', 'Lecture Slides', 'Revision Notes'],
+  },
+  {
+    label: 'MCQs',
+    value: 'mcqs',
+    color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-500/30',
+    icon: <ClipboardList size={16} />,
+    types: ['MCQ Bank', 'Topic MCQs', 'Chapter MCQs', 'Practice Test', 'Quiz'],
+  },
+  {
+    label: 'Past Papers',
+    value: 'past-papers',
+    color: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-500/30',
+    icon: <FileQuestion size={16} />,
+    types: ['Past Paper', 'Past Paper (Solved)', 'Sample Paper', 'Model Paper'],
+  },
+  {
+    label: 'Cheat Sheets',
+    value: 'cheat-sheets',
+    color: 'text-orange-600 bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-500/30',
+    icon: <LayoutList size={16} />,
+    types: ['Cheat Sheet', 'Summary Sheet', 'Formula Sheet', 'Quick Reference'],
+  },
+];
 
 export default function Admin() {
   const { materialsList, loading: listLoading } = useMaterialsList();
@@ -10,12 +42,20 @@ export default function Admin() {
     title: "",
     subject: "Biology",
     unitTitle: "",
+    category: "notes",
     type: "PDF Notes",
-    sizeStr: "2.5 MB",
+    sizeStr: "",
     url: ""
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const activeCat = CATEGORIES.find(c => c.value === formData.category) || CATEGORIES[0];
+
+  const handleCategoryChange = (catValue) => {
+    const cat = CATEGORIES.find(c => c.value === catValue);
+    setFormData(prev => ({ ...prev, category: catValue, type: cat.types[0] }));
+  };
 
   // UPLOAD HANDLER
   const handleSubmit = async (e) => {
@@ -108,41 +148,63 @@ export default function Admin() {
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Title</label>
               <input 
                 required
-                placeholder="Fluid Mosaic"
+                placeholder="e.g. Cell Biology Notes"
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
                 className="w-full rounded-xl border border-black/10 dark:border-white/10 p-3 bg-white dark:bg-black/50 text-gray-900 dark:text-white font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-gray-300"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Content Type</label>
-              <select 
-                value={formData.type}
-                onChange={(e) => setFormData({...formData, type: e.target.value})}
-                className="w-full rounded-xl border border-black/10 dark:border-white/10 p-3 bg-white dark:bg-black/50 text-gray-900 dark:text-white font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer"
-              >
-                <optgroup label="📝 Notes">
-                  <option value="PDF Notes">PDF Notes</option>
-                  <option value="Handwritten Notes">Handwritten Notes</option>
-                  <option value="Lecture Slides">Lecture Slides</option>
-                </optgroup>
-                <optgroup label="✅ MCQs">
-                  <option value="MCQ Bank">MCQ Bank</option>
-                  <option value="Practice Test">Practice Test</option>
-                  <option value="Topic MCQs">Topic MCQs</option>
-                  <option value="Quiz">Quiz</option>
-                </optgroup>
-                <optgroup label="📄 Past Papers">
-                  <option value="Past Paper">Past Paper</option>
-                  <option value="Past Paper (Solved)">Past Paper (Solved)</option>
-                  <option value="Sample Paper">Sample Paper</option>
-                </optgroup>
-                <optgroup label="📋 Quick Reference">
-                  <option value="Cheat Sheet">Cheat Sheet</option>
-                  <option value="Summary Sheet">Summary Sheet</option>
-                  <option value="Formula Sheet">Formula Sheet</option>
-                </optgroup>
-              </select>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">File Size <span className="normal-case font-normal text-gray-400">(optional)</span></label>
+              <input 
+                placeholder="e.g. 3.2 MB"
+                value={formData.sizeStr}
+                onChange={(e) => setFormData({...formData, sizeStr: e.target.value})}
+                className="w-full rounded-xl border border-black/10 dark:border-white/10 p-3 bg-white dark:bg-black/50 text-gray-900 dark:text-white font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-gray-300"
+              />
+            </div>
+          </div>
+
+          {/* CATEGORY + TYPE (two-step selection) */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Category</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => handleCategoryChange(cat.value)}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 font-bold text-sm transition-all ${
+                    formData.category === cat.value
+                      ? cat.color + ' border-current shadow-sm scale-[1.03]'
+                      : 'border-black/10 dark:border-white/10 text-gray-400 hover:border-black/20 dark:hover:border-white/20 bg-white dark:bg-black/30'
+                  }`}
+                >
+                  {cat.icon}
+                  <span className="text-xs">{cat.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Document Format <span className="normal-case font-normal text-gray-400">(based on category)</span></label>
+            <div className={`flex items-center gap-2 p-1 rounded-xl border-2 flex-wrap ${activeCat.color} border-current`}>
+              {activeCat.types.map(t => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setFormData(prev => ({...prev, type: t}))}
+                  className={`flex-1 min-w-[calc(50%-4px)] px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                    formData.type === t
+                      ? 'bg-current text-white shadow-sm'
+                      : 'hover:bg-current/10'
+                  }`}
+                  style={{ color: formData.type === t ? 'white' : 'inherit' }}
+                >
+                  {t}
+                </button>
+              ))}
             </div>
           </div>
           
