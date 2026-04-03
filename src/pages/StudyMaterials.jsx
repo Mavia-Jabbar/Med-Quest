@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, FileText, ChevronRight, FolderOpen, Dna, Atom, Magnet, Info, ClipboardList, FileQuestion, ScrollText, X } from 'lucide-react';
+import { BookOpen, FileText, ChevronRight, FolderOpen, Dna, Atom, Magnet, Info, ClipboardList, FileQuestion, ScrollText } from 'lucide-react';
 import ScienceLoader from '@/components/ui/ScienceLoader';
 import MagneticButton from '@/components/ui/MagneticButton';
 import PDFViewerEngine from '@/components/study/PDFViewerEngine';
@@ -9,11 +9,10 @@ import { useMaterialsList } from '@/services/materialService';
 
 // Content type categories with icons + colors
 const CONTENT_TYPES = [
-  { label: 'All',         value: 'all',        icon: <BookOpen size={14} />,       color: 'bg-gray-900 text-white dark:bg-white dark:text-gray-900',          inactive: 'bg-white/50 dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-white/30 dark:border-white/10 hover:bg-white dark:hover:bg-white/10' },
-  { label: 'Notes',       value: 'notes',      icon: <ScrollText size={14} />,     color: 'bg-blue-600 text-white',                                           inactive: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-900/30' },
-  { label: 'MCQs',        value: 'mcqs',       icon: <ClipboardList size={14} />,  color: 'bg-emerald-600 text-white',                                        inactive: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100' },
-  { label: 'Past Papers', value: 'past-papers', icon: <FileQuestion size={14} />, color: 'bg-purple-600 text-white',                                          inactive: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30 hover:bg-purple-100' },
-  { label: 'Cheat Sheets',value: 'cheat-sheets',icon: <FileText size={14} />,     color: 'bg-orange-500 text-white',                                         inactive: 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/30 hover:bg-orange-100' },
+  { label: 'Notes',       value: 'notes',       icon: <ScrollText size={14} />,    color: 'bg-blue-600 text-white',    inactive: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-900/30' },
+  { label: 'MCQs',        value: 'mcqs',        icon: <ClipboardList size={14} />, color: 'bg-emerald-600 text-white', inactive: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100' },
+  { label: 'Past Papers', value: 'past-papers', icon: <FileQuestion size={14} />, color: 'bg-purple-600 text-white',   inactive: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30 hover:bg-purple-100' },
+  { label: 'Cheat Sheets',value: 'cheat-sheets',icon: <FileText size={14} />,     color: 'bg-orange-500 text-white',  inactive: 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/30 hover:bg-orange-100' },
 ];
 
 // Map Firestore type strings → filter category
@@ -39,7 +38,7 @@ export default function StudyMaterials() {
   const { materialsList, loading } = useMaterialsList();
 
   const [activeSubject, setActiveSubject] = useState('Biology');
-  const [activeTypeFilter, setActiveTypeFilter] = useState('all');
+  const [activeTypeFilter, setActiveTypeFilter] = useState('notes');
   const [expandedUnits, setExpandedUnits] = useState([]);
   const [activePdf, setActivePdf] = useState(null);
 
@@ -81,15 +80,13 @@ export default function StudyMaterials() {
   // Apply type filter to units → only show units that have matching materials
   const filteredUnits = (subjectData?.units || []).map(unit => ({
     ...unit,
-    materials: activeTypeFilter === 'all'
-      ? unit.materials
-      : unit.materials.filter(m => typeToCategory(m.type) === activeTypeFilter),
+    materials: unit.materials.filter(m => typeToCategory(m.type) === activeTypeFilter),
   })).filter(unit => unit.materials.length > 0);
 
   // Count per type for the active subject
   const countByType = (cat) => {
     const allMats = (subjectData?.units || []).flatMap(u => u.materials);
-    return cat === 'all' ? allMats.length : allMats.filter(m => typeToCategory(m.type) === cat).length;
+    return allMats.filter(m => typeToCategory(m.type) === cat).length;
   };
 
   const handleOpenViewer = (material) => {
@@ -104,7 +101,7 @@ export default function StudyMaterials() {
 
   const handleSubjectChange = (subject) => {
     setActiveSubject(subject);
-    setActiveTypeFilter('all');
+    setActiveTypeFilter('notes');
     setExpandedUnits([]);
   };
 
@@ -147,7 +144,7 @@ export default function StudyMaterials() {
             <button
               key={ct.value}
               onClick={() => { setActiveTypeFilter(ct.value); setExpandedUnits([]); }}
-              disabled={count === 0 && ct.value !== 'all'}
+              disabled={count === 0}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs transition-all duration-200 whitespace-nowrap flex-shrink-0 disabled:opacity-30 disabled:cursor-not-allowed
                 ${isActive ? ct.color + ' shadow-md scale-[1.04]' : ct.inactive}`}
             >
@@ -159,15 +156,6 @@ export default function StudyMaterials() {
             </button>
           );
         })}
-
-        {activeTypeFilter !== 'all' && (
-          <button
-            onClick={() => setActiveTypeFilter('all')}
-            className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-          >
-            <X size={12} /> Clear
-          </button>
-        )}
       </div>
 
       {/* Content */}
