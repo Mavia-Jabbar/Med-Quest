@@ -115,15 +115,33 @@ export default function Admin() {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Type</label>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Content Type</label>
               <select 
                 value={formData.type}
                 onChange={(e) => setFormData({...formData, type: e.target.value})}
                 className="w-full rounded-xl border border-black/10 dark:border-white/10 p-3 bg-white dark:bg-black/50 text-gray-900 dark:text-white font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer"
               >
-                <option>PDF Notes</option>
-                <option>Cheat Sheet</option>
-                <option>Practice Test</option>
+                <optgroup label="📝 Notes">
+                  <option value="PDF Notes">PDF Notes</option>
+                  <option value="Handwritten Notes">Handwritten Notes</option>
+                  <option value="Lecture Slides">Lecture Slides</option>
+                </optgroup>
+                <optgroup label="✅ MCQs">
+                  <option value="MCQ Bank">MCQ Bank</option>
+                  <option value="Practice Test">Practice Test</option>
+                  <option value="Topic MCQs">Topic MCQs</option>
+                  <option value="Quiz">Quiz</option>
+                </optgroup>
+                <optgroup label="📄 Past Papers">
+                  <option value="Past Paper">Past Paper</option>
+                  <option value="Past Paper (Solved)">Past Paper (Solved)</option>
+                  <option value="Sample Paper">Sample Paper</option>
+                </optgroup>
+                <optgroup label="📋 Quick Reference">
+                  <option value="Cheat Sheet">Cheat Sheet</option>
+                  <option value="Summary Sheet">Summary Sheet</option>
+                  <option value="Formula Sheet">Formula Sheet</option>
+                </optgroup>
               </select>
             </div>
           </div>
