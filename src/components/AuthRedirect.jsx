@@ -17,7 +17,7 @@ export default function AuthRedirect() {
 
   // 2. User is already logged in → redirect them away from login/signup
   if (isLoggedIn) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/Dashboard" replace />;
     // You can also redirect to "/" or "/home" or "/app" — whatever makes sense
   }
 

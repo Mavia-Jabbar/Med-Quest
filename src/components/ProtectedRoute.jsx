@@ -18,7 +18,7 @@ export default function ProtectedRoute() {
 
   // Not logged in → redirect to login
   if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/Login" replace />;
   }
 
   // Logged in → show the protected page(s)
