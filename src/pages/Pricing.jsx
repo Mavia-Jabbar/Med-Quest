@@ -28,7 +28,7 @@ export default function Pricing() {
             key={tier.id}
             className={
               tier.isPro
-                ? "bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl p-6 transition-all hover:-translate-y-2 hover:shadow-cyan-500/10 ring-1 ring-white/20"
+                ? "bg-linear-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl p-6 transition-all hover:-translate-y-2 hover:shadow-cyan-500/10 ring-1 ring-white/20"
                 : "bg-white/40 dark:bg-black/40 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-xl rounded-3xl p-6 transition-all hover:-translate-y-2 hover:shadow-2xl"
             }
           >

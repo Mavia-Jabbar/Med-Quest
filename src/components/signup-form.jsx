@@ -15,22 +15,35 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export function SignupForm({ className, ...props }) {
   const {
-    name, setName,
-    email, setEmail,
-    password, setPassword,
-    confirmPassword, setConfirmPassword,
+    name,
+    setName,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
     error,
     loading,
-    showPassword, setShowPassword,
+    showPassword,
+    setShowPassword,
     handleSubmit,
     handleGoogleAuth,
   } = useSignupForm();
 
   return (
-    <div className={cn("flex flex-col gap-6 items-center justify-center w-full max-w-md mx-auto my-12", className)} {...props}>
+    <div
+      className={cn(
+        "flex flex-col gap-6 items-center justify-center w-full max-w-md mx-auto my-12",
+        className,
+      )}
+      {...props}
+    >
       <Card className="w-full bg-white/40 dark:bg-black/40 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.1)] rounded-2xl overflow-hidden">
         <CardHeader className="text-center pb-2">
-          <CardTitle className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Create Account</CardTitle>
+          <CardTitle className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Create Account
+          </CardTitle>
           <CardDescription className="text-gray-500 dark:text-gray-400 font-medium">
             Join the platform today
           </CardDescription>
@@ -38,7 +51,6 @@ export function SignupForm({ className, ...props }) {
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-4 mt-4">
-              
               {error && (
                 <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium text-center">
                   {error}
@@ -46,7 +58,12 @@ export function SignupForm({ className, ...props }) {
               )}
 
               <div className="grid gap-2">
-                <Label htmlFor="name" className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider ml-1">Full Name</Label>
+                <Label
+                  htmlFor="name"
+                  className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider ml-1"
+                >
+                  Full Name
+                </Label>
                 <Input
                   id="name"
                   type="text"
@@ -59,7 +76,12 @@ export function SignupForm({ className, ...props }) {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="email" className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider ml-1">Email</Label>
+                <Label
+                  htmlFor="email"
+                  className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider ml-1"
+                >
+                  Email
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -72,7 +94,12 @@ export function SignupForm({ className, ...props }) {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="password" className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider ml-1">Password</Label>
+                <Label
+                  htmlFor="password"
+                  className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider ml-1"
+                >
+                  Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -91,9 +118,14 @@ export function SignupForm({ className, ...props }) {
                   </button>
                 </div>
               </div>
-              
+
               <div className="grid gap-2">
-                <Label htmlFor="confirmPassword" className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider ml-1">Confirm Password</Label>
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider ml-1"
+                >
+                  Confirm Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -106,17 +138,24 @@ export function SignupForm({ className, ...props }) {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={loading}
-                className="w-full rounded-xl h-12 mt-4 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-white dark:to-gray-200 dark:text-black hover:scale-[1.02] shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold text-md border-none"
+                className="w-full rounded-xl h-12 mt-4 bg-linear-to-r from-gray-900 to-gray-800 dark:from-white dark:to-gray-200 dark:text-black hover:scale-[1.02] shadow-xl hover:shadow-2xl transition-all duration-300 font-semibold text-md border-none"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign Up"}
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  "Sign Up"
+                )}
               </Button>
 
               <div className="mt-6 text-center text-sm font-medium text-gray-600 dark:text-gray-300">
                 Already have an account?{" "}
-                <Link to="/Login" className="underline underline-offset-4 hover:text-primary transition-colors font-bold">
+                <Link
+                  to="/Login"
+                  className="underline underline-offset-4 hover:text-primary transition-colors font-bold"
+                >
                   Login
                 </Link>
               </div>

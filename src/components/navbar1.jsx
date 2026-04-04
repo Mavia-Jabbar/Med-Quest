@@ -17,28 +17,43 @@ export const Navbar1 = () => {
   const isLightBg = videoIndex === 0;
 
   // On home page, adapt text for video background. Elsewhere always use default.
-  const textClass = isHome && !isLightBg ? "text-white" : "text-gray-900 dark:text-white";
-  const subTextClass = isHome && !isLightBg ? "text-gray-200 hover:text-white" : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white";
+  const textClass =
+    isHome && !isLightBg ? "text-white" : "text-gray-900 dark:text-white";
+  const subTextClass =
+    isHome && !isLightBg
+      ? "text-gray-200 hover:text-white"
+      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white";
 
   // Glass bg adapts to video on home, solid on other pages
-  const headerBg = isHome && !isLightBg
-    ? "bg-white/5 border-white/15"
-    : "bg-white/10 dark:bg-black/20 border-white/30 dark:border-white/10";
+  const headerBg =
+    isHome && !isLightBg
+      ? "bg-white/5 border-white/15"
+      : "bg-white/10 dark:bg-black/20 border-white/30 dark:border-white/10";
 
   // Close mobile menu on route change
   React.useEffect(() => setMobileOpen(false), [location.pathname]);
 
   return (
     <div className="sticky top-3 z-50 w-full px-3 sm:px-4">
-      <div className={`w-full max-w-7xl mx-auto rounded-2xl backdrop-blur-2xl border shadow-lg shadow-black/5 transition-colors duration-700 ${headerBg}`}>
-        <div className="w-full px-4 sm:px-5 h-13 flex items-center justify-between gap-3" style={{height: '52px'}}>
-
+      <div
+        className={`w-full max-w-7xl mx-auto rounded-2xl backdrop-blur-2xl border shadow-lg shadow-black/5 transition-colors duration-700 ${headerBg}`}
+      >
+        <div
+          className="w-full px-4 sm:px-5 h-13 flex items-center justify-between gap-3"
+          style={{ height: "52px" }}
+        >
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+          <Link to="/" className="flex items-center gap-2 group shrink-0">
             <div className="w-8 h-8 rounded-xl overflow-hidden shadow-md group-hover:scale-105 transition-transform border border-black/10 dark:border-white/10">
-              <img src={appLogo} alt="MedQuest" className="w-full h-full object-cover" />
+              <img
+                src={appLogo}
+                alt="MedQuest"
+                className="w-full h-full object-cover"
+              />
             </div>
-            <span className={`text-base font-black tracking-tight transition-colors duration-700 ${textClass}`}>
+            <span
+              className={`text-base font-black tracking-tight transition-colors duration-700 ${textClass}`}
+            >
               {siteConfig.abbreviation}
             </span>
           </Link>
@@ -63,10 +78,12 @@ export const Navbar1 = () => {
             {isLoggedIn ? (
               <>
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-7 h-7 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
                     {user?.email?.charAt(0)?.toUpperCase()}
                   </div>
-                  <span className={`text-sm font-medium ${textClass}`}>{user?.email?.split("@")[0]}</span>
+                  <span className={`text-sm font-medium ${textClass}`}>
+                    {user?.email?.split("@")[0]}
+                  </span>
                 </div>
                 <button
                   onClick={signOutUser}
@@ -107,7 +124,9 @@ export const Navbar1 = () => {
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out px-3 sm:px-4 ${mobileOpen ? "max-h-96 opacity-100 mt-2" : "max-h-0 opacity-0"}`}
       >
-        <div className={`w-full max-w-7xl mx-auto rounded-2xl backdrop-blur-2xl border px-4 py-4 flex flex-col gap-1 shadow-lg shadow-black/5 transition-colors duration-700 ${isHome && !isLightBg ? "bg-white/5 border-white/15" : "bg-white/10 dark:bg-black/20 border-white/30 dark:border-white/10"}`}>
+        <div
+          className={`w-full max-w-7xl mx-auto rounded-2xl backdrop-blur-2xl border px-4 py-4 flex flex-col gap-1 shadow-lg shadow-black/5 transition-colors duration-700 ${isHome && !isLightBg ? "bg-white/5 border-white/15" : "bg-white/10 dark:bg-black/20 border-white/30 dark:border-white/10"}`}
+        >
           {navLinks.map((link) => (
             <NavLink
               key={link.href}
@@ -127,7 +146,9 @@ export const Navbar1 = () => {
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
                     {user?.email?.charAt(0)?.toUpperCase()}
                   </div>
-                  <span className={`text-sm font-medium ${textClass}`}>{user?.email?.split("@")[0]}</span>
+                  <span className={`text-sm font-medium ${textClass}`}>
+                    {user?.email?.split("@")[0]}
+                  </span>
                 </div>
                 <button
                   onClick={signOutUser}

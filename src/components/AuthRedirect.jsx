@@ -9,7 +9,7 @@ export default function AuthRedirect() {
   // 1. Still checking auth state (Firebase needs ~200–800 ms on first load / refresh)
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50/50 via-white to-cyan-50/50 dark:from-gray-900 dark:via-gray-950 dark:to-slate-900">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-linear-to-br from-indigo-50/50 via-white to-cyan-50/50 dark:from-gray-900 dark:via-gray-950 dark:to-slate-900">
         <ScienceLoader text="Initializing Core Data..." />
       </div>
     );
