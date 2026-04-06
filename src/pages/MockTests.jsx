@@ -1,33 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { MOCK_TESTS } from '@/data/mockTestsData';
+import React, { useState, useEffect, useRef } from 'react';
+import { MOCK_TESTS as STATIC_MOCK_TESTS } from '@/data/mockTestsData';
 import { updateSubjectMastery } from '@/services/progressService';
 import { useFirebase } from '@/Context/firebase';
-import { BrainCircuit, Clock, ChevronRight, ChevronLeft, Flag, CheckCircle2, ChevronDown, Award } from 'lucide-react';
+import { BrainCircuit, Clock, ChevronRight, ChevronLeft, Flag, CheckCircle2, ChevronDown, Award, UploadCloud, FileText } from 'lucide-react';
 import MagneticButton from '@/components/ui/MagneticButton';
+import ScienceLoader from '@/components/ui/ScienceLoader';
+import { convertPdfToMockTest, fetchCustomMockTests } from '@/services/aiMockTestService';
 
 export default function MockTests() {
-  const { userData } = useFirebase();
+  const { user, userData } = useFirebase();
   
   // View States: 'menu' | 'active' | 'results'
   const [view, setView] = useState('menu');
   const [activeTest, setActiveTest] = useState(null);
   
+  // Tests State
+  const [allTests, setAllTests] = useState({ ...STATIC_MOCK_TESTS });
+  const [isLoadingTests, setIsLoadingTests] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  
   // Active Test States
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(0); // in seconds
+  const [timeLeft, setTimeLeft] = useState(0);
   
   // Results State
   const [score, setScore] = useState({ correct: 0, total: 0, percentage: 0 });
 
-  // 1. TIMER LOGIC
+  const fileInputRef = useRef(null);
+
+  // Load Custom Tests from Firebase
+  useEffect(() => {
+    const loadTests = async () => {
+      if (!user?.uid) {
+        setIsLoadingTests(false);
+        return;
+      }
+      try {
+        const customTests = await fetchCustomMockTests(user.uid);
+        const testsObj = { ...STATIC_MOCK_TESTS };
+        customTests.forEach((test, idx) => {
+           testsObj[`Custom_${test.docId}`] = test;
+        });
+        setAllTests(testsObj);
+      } catch (err) {
+        console.error("Failed to load tests", err);
+      } finally {
+         setIsLoadingTests(false);
+      }
+    };
+    loadTests();
+  }, [user?.uid]);
+
+  // TIMER LOGIC
   useEffect(() => {
     let timer;
     if (view === 'active' && timeLeft > 0) {
       timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
-            handleCompleteTest(); // Auto-submit when time runs out
+            handleCompleteTest(); 
             return 0;
           }
           return prev - 1;
@@ -37,16 +69,15 @@ export default function MockTests() {
     return () => clearInterval(timer);
   }, [view, timeLeft]);
 
-  // Format Timer "MM:SS"
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
     const s = (seconds % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
-  // 2. ACTIONS
+  // ACTIONS
   const handleStartTest = (subjectKey) => {
-    const test = MOCK_TESTS[subjectKey];
+    const test = allTests[subjectKey];
     setActiveTest({ ...test, subjectKey });
     setAnswers({});
     setCurrentQuestionIdx(0);
@@ -59,7 +90,6 @@ export default function MockTests() {
   };
 
   const handleCompleteTest = async () => {
-    // Calculate final grade
     let correctCount = 0;
     const totalCount = activeTest.questions.length;
     
@@ -74,44 +104,104 @@ export default function MockTests() {
     
     // Upload Telemetry to Firestore dynamically
     if (userData?.uid && activeTest?.subjectKey) {
-      await updateSubjectMastery(userData.uid, activeTest.subjectKey, rawPercentage);
+      // Don't update Mastery for deeply custom non-standard subjects unless mapped
+      if (!activeTest.subjectKey.startsWith("Custom_")) {
+        await updateSubjectMastery(userData.uid, activeTest.subjectKey, rawPercentage);
+      }
     }
     
     setView('results');
   };
 
-  // 3. RENDERERS
+  // UPLOAD PDF LOGIC
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !user?.uid) return;
+    
+    if (file.type !== "application/pdf") {
+      alert("Please upload a valid PDF document.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Data = reader.result.split(',')[1];
+        
+        try {
+          const newTest = await convertPdfToMockTest(user.uid, base64Data, file.name);
+          setAllTests(prev => ({
+             ...prev, 
+             [`Custom_${newTest.docId}`]: newTest 
+          }));
+          alert("Successfully converted PDF to Interactive Mock Test!");
+        } catch (err) {
+          alert(`Error generating test: ${err.message}`);
+        } finally {
+          setIsUploading(false);
+          // Reset input
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error(err);
+      setIsUploading(false);
+    }
+  };
+
+  // RENDERERS
   
   if (view === 'menu') {
+    if (isUploading) {
+      return (
+        <div className="flex-1 w-full h-full flex items-center justify-center">
+           <ScienceLoader text="Analyzing PDF & Matrixing Exam..." />
+        </div>
+      );
+    }
+
     return (
       <div className="flex-1 w-full overflow-y-auto p-4 sm:p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-700">
         <div className="space-y-8 sm:space-y-12">
           
-          <div className="text-center space-y-3 sm:space-y-4">
+          <div className="text-center space-y-3 sm:space-y-4 relative">
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto shadow-lg shadow-blue-500/20">
               <BrainCircuit className="w-6 h-6 sm:w-8 sm:h-8" />
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight">Assessment Engine</h1>
-            <p className="text-sm sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium">Select a highly-calibrated MDCAT subject test. Your time is restricted and your score will instantly update your Dashboard Mastery.</p>
+            <p className="text-sm sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium mb-6">Select an MDCAT subject test, or magically convert your own paper PDFs into practical assessments.</p>
+            
+            {/* Custom File Upload Box */}
+            <div className="max-w-xl mx-auto mt-6 p-6 border-2 border-dashed border-primary/40 dark:border-primary/30 rounded-3xl bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20 transition-all cursor-pointer flex flex-col items-center justify-center" onClick={() => fileInputRef.current?.click()}>
+               <UploadCloud size={32} className="text-primary mb-3" />
+               <p className="text-gray-900 dark:text-white font-bold text-lg">Upload PDF Mock Test</p>
+               <p className="text-primary/70 dark:text-primary/60 text-sm font-medium mt-1">AI will automatically parse marked MCQs instantly.</p>
+               <input type="file" accept="application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.keys(MOCK_TESTS).map((subjectKey) => {
-              const test = MOCK_TESTS[subjectKey];
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+            {Object.keys(allTests).map((subjectKey) => {
+              const test = allTests[subjectKey];
               const isBio = subjectKey === 'Biology';
               const isChem = subjectKey === 'Chemistry';
+              const isPhysics = subjectKey === 'Physics';
+              const isCustom = subjectKey.startsWith('Custom_');
               
               return (
-                <div key={subjectKey} className="bg-white/60 dark:bg-black/40 backdrop-blur-2xl border border-white/40 dark:border-white/10 rounded-3xl p-6 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col group cursor-pointer" onClick={() => handleStartTest(subjectKey)}>
-                  <div className={`w-12 h-12 rounded-2xl mb-6 flex items-center justify-center shadow-lg ${isBio ? 'bg-emerald-500 text-white' : isChem ? 'bg-blue-500 text-white' : 'bg-fuchsia-500 text-white'} group-hover:scale-110 transition-transform`}>
-                     <Award size={24} />
+                <div key={subjectKey} className="bg-white/60 dark:bg-black/40 backdrop-blur-2xl border border-white/40 dark:border-white/10 rounded-3xl p-6 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col group cursor-pointer relative overflow-hidden" onClick={() => handleStartTest(subjectKey)}>
+                  {isCustom && <div className="absolute top-0 right-0 bg-primary text-white text-xs font-black px-3 py-1 rounded-bl-xl">CUSTOM</div>}
+                  <div className={`w-12 h-12 rounded-2xl mb-6 flex items-center justify-center shadow-lg ${isBio ? 'bg-emerald-500 text-white' : isChem ? 'bg-blue-500 text-white' : isPhysics ? 'bg-fuchsia-500 text-white' : 'bg-primary text-white'} group-hover:scale-110 transition-transform`}>
+                     {isCustom ? <FileText size={24} /> : <Award size={24} />}
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{subjectKey} MDCAT</h3>
-                  <p className="text-sm text-gray-500 font-medium mb-6 flex-1">{test.description}</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-1 truncate">{test.title || subjectKey}</h3>
+                  <p className="text-sm text-gray-500 font-medium mb-6 flex-1 line-clamp-2">{test.description}</p>
                   
                   <div className="flex items-center justify-between text-sm font-bold border-t border-black/5 dark:border-white/5 pt-4">
                      <span className="flex items-center gap-2 text-gray-600 dark:text-gray-300"><Clock size={16} /> {test.durationMinutes} Min</span>
-                     <span className="text-primary">{test.questions.length} MCQs</span>
+                     <span className="text-primary">{test.questions?.length || 0} MCQs</span>
                   </div>
                 </div>
               );
@@ -128,7 +218,6 @@ export default function MockTests() {
 
     return (
       <div className="flex-1 w-full flex flex-col h-full bg-white dark:bg-[#09090b] animate-in slide-in-from-bottom-8 duration-700">
-        {/* Exam Header */}
         <header className="min-h-14 border-b border-gray-200 dark:border-white/10 px-3 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 bg-gray-50 dark:bg-black/50 backdrop-blur-md z-10 w-full gap-2 py-3 sm:py-0">
            <div>
              <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">{activeTest.title}</h2>
@@ -141,19 +230,13 @@ export default function MockTests() {
            </div>
         </header>
 
-        {/* Content Wrapper */}
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full">
-           
-           {/* LEFT Pane: MCQ Canvas */}
            <div className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-10 relative">
              <div className="max-w-3xl mx-auto">
-               
-               {/* The Question */}
                <h3 className="text-lg sm:text-2xl md:text-3xl font-medium leading-tight text-gray-900 dark:text-white mb-6 sm:mb-10 pb-4 sm:pb-6 border-b border-black/5 dark:border-white/5">
                  {q.text}
                </h3>
 
-               {/* The Options */}
                <div className="space-y-3">
                  {q.options.map((optionText, idx) => {
                    const isSelected = answers[currentQuestionIdx] === idx;
@@ -175,13 +258,10 @@ export default function MockTests() {
                    );
                  })}
                </div>
-
              </div>
            </div>
 
-           {/* RIGHT Pane: Navigation Menu */}
            <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/50 p-6 flex flex-col justify-between shrink-0">
-             
              <div>
                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Exam Navigation</h4>
                <div className="grid grid-cols-5 gap-3">
@@ -223,7 +303,6 @@ export default function MockTests() {
                   SUBMIT EXAM
                </MagneticButton>
              </div>
-
            </div>
         </div>
       </div>
@@ -240,14 +319,14 @@ export default function MockTests() {
            </div>
 
            <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-4">Exam Completed!</h2>
-           <p className="text-lg text-gray-500 dark:text-gray-400 font-medium mb-10">You scored <strong>{score.correct}</strong> out of <strong>{score.total}</strong> on the {activeTest.title} assessment. Your global Gamification Mastery has been permanently locked into the Cloud.</p>
+           <p className="text-lg text-gray-500 dark:text-gray-400 font-medium mb-10">You scored <strong>{score.correct}</strong> out of <strong>{score.total}</strong> on the {activeTest.title} assessment.</p>
 
            <div className="grid grid-cols-2 gap-4">
              <button onClick={() => setView('menu')} className="py-4 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-2xl font-bold text-gray-700 dark:text-gray-200 transition-colors">
                 Return to Menu
              </button>
              <button onClick={() => window.location.href = '/Dashboard'} className="py-4 bg-gray-900 dark:bg-white hover:scale-105 transition-transform text-white dark:text-gray-900 rounded-2xl font-bold shadow-xl">
-                View Dashboard Mastery
+                View Dashboard
              </button>
            </div>
         </div>
