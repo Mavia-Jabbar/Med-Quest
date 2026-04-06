@@ -41,11 +41,11 @@ export default function PDFViewerEngine({ url, title, materialId, onClose }) {
                  Exit AI Canvas
                </Button>
             )}
-            <Button variant="ghost" size="sm" asChild className="hidden sm:flex rounded-lg hover:bg-black/5 dark:hover:bg-white/10">
-              <a href={url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-4 h-4 mr-2" /> Open Drive
-              </a>
-            </Button>
+            {!useLegacy && (
+              <span className="hidden sm:inline-flex items-center text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-white/10 px-3 py-1.5 rounded-lg mr-2">
+                Drag cursor to highlight & interact
+              </span>
+            )}
             <Button variant="destructive" size="icon" onClick={onClose} className="rounded-full w-8 h-8 opacity-80 hover:opacity-100">
               <X className="w-5 h-5" />
             </Button>
