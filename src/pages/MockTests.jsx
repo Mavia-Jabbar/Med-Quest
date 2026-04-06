@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { MOCK_TESTS as STATIC_MOCK_TESTS } from '@/data/mockTestsData';
 import { updateSubjectMastery } from '@/services/progressService';
 import { useFirebase } from '@/Context/firebase';
-import { BrainCircuit, Clock, ChevronRight, ChevronLeft, Flag, CheckCircle2, Award, FileText } from 'lucide-react';
+import { BrainCircuit, Clock, ChevronRight, ChevronLeft, Award, FileText, CheckCircle2, XCircle } from 'lucide-react';
 import MagneticButton from '@/components/ui/MagneticButton';
 import ScienceLoader from '@/components/ui/ScienceLoader';
 import { fetchCustomMockTests } from '@/services/aiMockTestService';
@@ -15,7 +14,7 @@ export default function MockTests() {
   const [activeTest, setActiveTest] = useState(null);
   
   // Tests State
-  const [allTests, setAllTests] = useState({ ...STATIC_MOCK_TESTS });
+  const [allTests, setAllTests] = useState({});
   const [isLoadingTests, setIsLoadingTests] = useState(true);
   
   // Active Test States
@@ -26,13 +25,12 @@ export default function MockTests() {
   // Results State
   const [score, setScore] = useState({ correct: 0, total: 0, percentage: 0 });
 
-  // Load Global Custom Tests from Firebase
+  // Load Global Custom Tests from Firebase ONLY
   useEffect(() => {
     const loadTests = async () => {
       try {
-        // Fetch globally distributed tests (no UID required now)
         const customTests = await fetchCustomMockTests();
-        const testsObj = { ...STATIC_MOCK_TESTS };
+        const testsObj = {};
         customTests.forEach((test) => {
            testsObj[`Custom_${test.docId}`] = test;
         });
@@ -127,31 +125,35 @@ export default function MockTests() {
             <p className="text-sm sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium">Select an MDCAT subject test below to begin your timed assessment.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.keys(allTests).map((subjectKey) => {
-              const test = allTests[subjectKey];
-              const isBio = subjectKey === 'Biology';
-              const isChem = subjectKey === 'Chemistry';
-              const isPhysics = subjectKey === 'Physics';
-              const isCustom = subjectKey.startsWith('Custom_');
-              
-              return (
-                <div key={subjectKey} className="bg-white/60 dark:bg-black/40 backdrop-blur-2xl border border-white/40 dark:border-white/10 rounded-3xl p-6 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col group cursor-pointer relative overflow-hidden" onClick={() => handleStartTest(subjectKey)}>
-                  {isCustom && <div className="absolute top-0 right-0 bg-primary/20 backdrop-blur-md text-primary text-xs font-black px-3 py-1 rounded-bl-xl border-l border-b border-primary/20">GLOBAL PUBLISHED</div>}
-                  <div className={`w-12 h-12 rounded-2xl mb-6 flex items-center justify-center shadow-lg ${isBio ? 'bg-emerald-500 text-white' : isChem ? 'bg-blue-500 text-white' : isPhysics ? 'bg-fuchsia-500 text-white' : 'bg-primary text-white'} group-hover:scale-110 transition-transform`}>
-                     {isCustom ? <FileText size={24} /> : <Award size={24} />}
+          {Object.keys(allTests).length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-gray-200 dark:border-white/10 rounded-3xl text-center">
+               <FileText size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
+               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No Active Tests Available</h3>
+               <p className="text-gray-500 font-medium">Please wait for the platform Administrators to deploy a PDF test matrix.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Object.keys(allTests).map((subjectKey) => {
+                const test = allTests[subjectKey];
+                
+                return (
+                  <div key={subjectKey} className="bg-white/60 dark:bg-black/40 backdrop-blur-2xl border border-white/40 dark:border-white/10 rounded-3xl p-6 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col group cursor-pointer relative overflow-hidden" onClick={() => handleStartTest(subjectKey)}>
+                    <div className="absolute top-0 right-0 bg-primary/20 backdrop-blur-md text-primary text-xs font-black px-3 py-1 rounded-bl-xl border-l border-b border-primary/20">GLOBAL PUBLISHED</div>
+                    <div className="w-12 h-12 rounded-2xl mb-6 flex items-center justify-center shadow-lg bg-primary text-white group-hover:scale-110 transition-transform">
+                       <FileText size={24} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-1 truncate">{test.title || subjectKey}</h3>
+                    <p className="text-sm text-gray-500 font-medium mb-6 flex-1 line-clamp-2">{test.description}</p>
+                    
+                    <div className="flex items-center justify-between text-sm font-bold border-t border-black/5 dark:border-white/5 pt-4">
+                       <span className="flex items-center gap-2 text-gray-600 dark:text-gray-300"><Clock size={16} /> {test.durationMinutes} Min</span>
+                       <span className="text-primary">{test.questions?.length || 0} MCQs</span>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-1 truncate">{test.title || subjectKey}</h3>
-                  <p className="text-sm text-gray-500 font-medium mb-6 flex-1 line-clamp-2">{test.description}</p>
-                  
-                  <div className="flex items-center justify-between text-sm font-bold border-t border-black/5 dark:border-white/5 pt-4">
-                     <span className="flex items-center gap-2 text-gray-600 dark:text-gray-300"><Clock size={16} /> {test.durationMinutes} Min</span>
-                     <span className="text-primary">{test.questions?.length || 0} MCQs</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -256,24 +258,89 @@ export default function MockTests() {
 
   if (view === 'results') {
     return (
-      <div className="flex-1 w-full h-full flex items-center justify-center overflow-y-auto p-6 relative bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:from-emerald-950/20 dark:via-black dark:to-blue-950/20">
-        <div className="w-full max-w-2xl bg-white/70 dark:bg-black/60 backdrop-blur-3xl border border-white/50 dark:border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] rounded-[3rem] p-10 md:p-16 text-center animate-in zoom-in-50 duration-700 fade-in slide-in-from-bottom-20">
-           
-           <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center border-8 shadow-2xl mb-8 ${score.percentage >= 80 ? 'bg-emerald-50 border-emerald-100 text-emerald-500 dark:bg-emerald-900/30 dark:border-emerald-800/40' : score.percentage >= 50 ? 'bg-orange-50 border-orange-100 text-orange-500 dark:bg-orange-900/30 dark:border-orange-800/40' : 'bg-red-50 border-red-100 text-red-500 dark:bg-red-900/30 dark:border-red-800/40'}`}>
+      <div className="flex-1 w-full h-full flex flex-col bg-white dark:bg-[#09090b] overflow-y-auto relative animate-in slide-in-from-bottom-8 duration-700 pb-20">
+        
+        {/* Results Header */}
+        <div className="w-full bg-gradient-to-br from-indigo-50 to-emerald-50 dark:from-indigo-950/20 dark:to-emerald-950/20 border-b border-gray-200 dark:border-white/10 p-10 md:p-14 text-center">
+            <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center border-8 shadow-2xl mb-8 transition-transform hover:scale-105 ${score.percentage >= 80 ? 'bg-emerald-50 border-emerald-100 text-emerald-500 dark:bg-emerald-900/30 dark:border-emerald-800/40' : score.percentage >= 50 ? 'bg-orange-50 border-orange-100 text-orange-500 dark:bg-orange-900/30 dark:border-orange-800/40' : 'bg-red-50 border-red-100 text-red-500 dark:bg-red-900/30 dark:border-red-800/40'}`}>
               <span className="text-4xl font-black">{score.percentage}%</span>
            </div>
-
-           <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-4">Exam Completed!</h2>
-           <p className="text-lg text-gray-500 dark:text-gray-400 font-medium mb-10">You scored <strong>{score.correct}</strong> out of <strong>{score.total}</strong> on the {activeTest.title} assessment.</p>
-
-           <div className="grid grid-cols-2 gap-4">
-             <button onClick={() => setView('menu')} className="py-4 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-2xl font-bold text-gray-700 dark:text-gray-200 transition-colors">
-                Return to Menu
-             </button>
-             <button onClick={() => window.location.href = '/Dashboard'} className="py-4 bg-gray-900 dark:bg-white hover:scale-105 transition-transform text-white dark:text-gray-900 rounded-2xl font-bold shadow-xl">
-                View Dashboard
+           <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-4">Diagnostics Complete!</h2>
+           <p className="text-lg text-gray-500 dark:text-gray-400 font-medium mb-10 max-w-xl mx-auto">You scored <strong>{score.correct}</strong> out of <strong>{score.total}</strong> on the {activeTest.title}. Review your exact mistakes below.</p>
+           
+           <div className="flex items-center justify-center gap-4 max-w-sm mx-auto">
+             <button onClick={() => setView('menu')} className="flex-1 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:scale-105 transition-transform rounded-2xl font-bold shadow-xl">
+                Exit Engine
              </button>
            </div>
+        </div>
+
+        {/* Review Payload Mapping */}
+        <div className="max-w-4xl mx-auto w-full p-6 md:p-10 space-y-12">
+            <div className="flex items-center gap-4 border-b border-gray-200 dark:border-white/10 pb-4 mb-4">
+               <h3 className="text-xl font-black text-gray-900 dark:text-white">Exam Review</h3>
+               <span className="px-3 py-1 bg-gray-100 dark:bg-white/10 rounded-lg text-xs font-bold text-gray-500 tracking-wider">PAPER TRACE</span>
+            </div>
+
+            {activeTest.questions.map((q, qIndex) => {
+               const userAnswer = answers[qIndex];
+               const isMissed = userAnswer !== q.correctAnswer;
+               
+               return (
+                 <div key={qIndex} className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-3xl p-6 md:p-8 shadow-sm">
+                   
+                   <div className="flex items-start gap-4 mb-6">
+                      <div className={`w-8 h-8 shrink-0 flex items-center justify-center rounded-full font-black text-white shadow-md ${!isMissed ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                        {qIndex + 1}
+                      </div>
+                      <h4 className="text-lg md:text-xl font-semibold leading-relaxed text-gray-900 dark:text-white whitespace-pre-wrap">
+                        {q.text}
+                      </h4>
+                   </div>
+
+                   <div className="space-y-3 pl-12">
+                      {q.options.map((optText, optIdx) => {
+                         const isChosen = userAnswer === optIdx;
+                         const isCorrect = q.correctAnswer === optIdx;
+                         
+                         // Compute Dynamic Styling
+                         let styleClass = "border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-400";
+                         let icon = null;
+
+                         if (isCorrect) {
+                           styleClass = "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 shadow-sm ring-2 ring-emerald-500/20 ring-offset-2 dark:ring-offset-[#09090b]";
+                           icon = <CheckCircle2 size={20} className="text-emerald-500" />;
+                         } else if (isChosen && !isCorrect) {
+                           styleClass = "border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 shadow-sm";
+                           icon = <XCircle size={20} className="text-red-500" />;
+                         }
+
+                         return (
+                           <div key={optIdx} className={`w-full p-4 rounded-xl border-2 flex items-center justify-between gap-4 transition-all ${styleClass}`}>
+                              <div className="flex items-center gap-4">
+                                <div className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center font-bold text-xs ${isCorrect ? 'bg-emerald-500 text-white' : isChosen ? 'bg-red-500 text-white' : 'bg-gray-200 dark:bg-black text-gray-400'}`}>
+                                  {String.fromCharCode(65 + optIdx)}
+                                </div>
+                                <span className="text-sm md:text-base font-medium">{optText}</span>
+                              </div>
+                              {icon}
+                           </div>
+                         );
+                      })}
+                   </div>
+
+                   {/* AI Generated Explanation Block if parsed */}
+                   {q.explanation && (
+                     <div className="mt-6 ml-12 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-200 dark:border-blue-500/30">
+                       <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">
+                         <strong className="text-blue-900 dark:text-blue-100 uppercase tracking-widest text-[10px] block mb-1.5">AI Inference</strong>
+                         {q.explanation}
+                       </p>
+                     </div>
+                   )}
+                 </div>
+               );
+            })}
         </div>
       </div>
     );
