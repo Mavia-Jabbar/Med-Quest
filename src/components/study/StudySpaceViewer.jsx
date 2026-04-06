@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Sparkles, Highlighter, Check, MessageSquare } from 'lucide-react';
+import MagneticButton from '@/components/ui/MagneticButton';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import Tutor from '@/pages/Tutor';
 
 export default function StudySpaceViewer({ material, onClose, user }) {
@@ -64,7 +66,7 @@ export default function StudySpaceViewer({ material, onClose, user }) {
     
     // A robust simple method: wrap in `**[HIGHLIGHTED] text**` or similar. 
     // We will just do a standard string replace for demonstration purposes of saving text state dynamically!
-    setMarkdownText(prev => prev.replace(selectedText, `**${selectedText}**`));
+    setMarkdownText(prev => prev.replace(selectedText, `<mark class="bg-yellow-200 text-gray-900 rounded px-1">${selectedText}</mark>`));
     
     setMenuPos(null);
     window.getSelection().removeAllRanges();
@@ -100,8 +102,8 @@ export default function StudySpaceViewer({ material, onClose, user }) {
       {/* Main Markdown Surface */}
       <div className="flex-1 w-full overflow-y-auto px-6 py-12 md:px-20 lg:px-44">
         <div className="max-w-4xl mx-auto" ref={contentRef}>
-          <div className="prose prose-lg dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary prose-strong:text-emerald-600 dark:prose-strong:text-emerald-400 max-w-none break-words">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          <div className="prose prose-lg dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary max-w-none break-words">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                {markdownText}
             </ReactMarkdown>
           </div>
@@ -119,7 +121,7 @@ export default function StudySpaceViewer({ material, onClose, user }) {
               <Highlighter size={16} /> Highlight
            </button>
            <div className="w-px h-6 bg-gray-700 dark:bg-gray-200" />
-           <button onClick={handleAskAI} className="flex items-center gap-2 px-4 py-2 hover:bg-white/10 dark:hover:bg-black/5 rounded-xl text-primary font-black text-sm transition-colors">
+           <button onClick={handleAskAI} className="flex items-center gap-2 px-4 py-2 hover:bg-white/10 dark:hover:bg-black/5 rounded-xl text-blue-400 dark:text-blue-600 font-black text-sm transition-colors">
               <MessageSquare size={16} /> Ask AI
            </button>
          </div>
@@ -139,7 +141,7 @@ export default function StudySpaceViewer({ material, onClose, user }) {
            </div>
            <div className="flex-1 w-full overflow-hidden relative">
               {/* Reuse Tutor page natively but override padding/backgrounds implicitly using standard wrapper */}
-              <Tutor contextualPrompt={aiContextQuery} hideHeader={true} />
+              <Tutor contextualPrompt={aiContextQuery} hideHeader={true} ephemeral={true} />
            </div>
         </div>
       )}
