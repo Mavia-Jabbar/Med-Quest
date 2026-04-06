@@ -37,9 +37,14 @@ export const transcribePdfToMarkdown = async (base64Pdf) => {
     if (markdown.startsWith("```markdown")) {
         markdown = markdown.replace(/^```markdown/, "").replace(/```$/, "").trim();
     }
+    
+    if (!markdown || markdown.length < 5) {
+        throw new Error("AI returned an empty transcription. Try a different document.");
+    }
+    
     return markdown;
   } catch (error) {
     console.error("Transcription failed:", error);
-    throw new Error("Failed to transcribe PDF. Try keeping file sizes reasonable.");
+    throw new Error(error.message || "Failed to transcribe PDF.");
   }
 };

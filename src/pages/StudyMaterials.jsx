@@ -64,10 +64,12 @@ export default function StudyMaterials() {
         ui = defaultStructure[si].units.length - 1;
       }
       defaultStructure[si].units[ui].materials.push({
+        id: mat.id,
         title: mat.title,
         type: mat.type || 'PDF Notes',
         size: mat.size || '',
         url: mat.url,
+        content: mat.content // Crucial for StudySpaceViewer!
       });
     });
 
