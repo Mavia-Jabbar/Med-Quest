@@ -1,9 +1,21 @@
 import { db } from "@/Context/firebase";
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Ensure the API Key exists in the .env.local file
-const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-const SYSTEM_INSTRUCTION = "You are the primary elite MDCAT Tutor for the MedQuest application. You must ONLY answer questions regarding Medical Sciences, Biology, Chemistry, and Physics. Be extremely concise, highly encouraging, and strictly accurate. You are strictly forbidden from using bullet points or the '-' (dash) character in your responses. Always output fluid, continuous paragraphs instead of lists. Refuse to answer non-academic questions politely.";
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+let genAI = null;
+let model = null;
+
+if (apiKey) {
+  genAI = new GoogleGenerativeAI(apiKey);
+  // System Instructions explicitly limit the AI to MDCAT capabilities and formatting rules
+  model = genAI.getGenerativeModel({
+    model: "gemini-flash-latest", 
+    systemInstruction: "You are the primary elite MDCAT Tutor for the MedQuest application. You must ONLY answer questions regarding Medical Sciences, Biology, Chemistry, and Physics. Be highly encouraging and strictly accurate. Please format your responses using markdown, including headings, bold text, and bullet points to break down complex topics clearly. Refuse to answer non-academic questions politely.",
+  });
+}
 
 /**
  * Initializes a real-time listening connection to a user's Chat History on Firestore.
@@ -51,52 +63,38 @@ export const appendChatMessage = async (userId, role, text) => {
  * based on the student's prompt and past history.
  */
 export const askAITutor = async (userId, userMessage, chatHistory = []) => {
-  if (!apiKey) {
-    throw new Error("Missing OpenRouter API Key. Please add VITE_OPENROUTER_API_KEY to your .env.local file.");
+  if (!apiKey || !model) {
+    throw new Error("Missing Gemini API Key. Please add VITE_GEMINI_API_KEY to your .env.local file.");
   }
 
   try {
     // 1. Save student's query to Firestore
     await appendChatMessage(userId, 'user', userMessage);
 
-    // 2. Format history into OpenRouter's specific structure 
-    const messages = [
-      { role: "system", content: SYSTEM_INSTRUCTION },
-      ...chatHistory.map(msg => ({
-        role: msg.role === 'model' ? 'assistant' : 'user',
-        content: msg.text
-      })),
-      { role: "user", content: userMessage }
-    ];
+    // 2. Format history into Gemini's specific 'contents' structure 
+    const formattedHistory = chatHistory.map(msg => ({
+      role: msg.role === 'model' ? 'model' : 'user',
+      parts: [{ text: msg.text }]
+    }));
 
-    // 3. Request completion from OpenRouter
-    console.log("Sending message to OpenRouter API...");
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "qwen/qwen3.6-plus:free", // Qwen 3.6 Plus Free via OpenRouter
-        messages: messages,
-      })
+    // Start a Chat Session keeping recent context
+    console.log("Starting chat with formatted history length:", formattedHistory.length);
+    const chatSession = model.startChat({
+      history: formattedHistory,
     });
 
-    if (!response.ok) {
-      throw new Error(`OpenRouter API Error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const aiResponseText = data.choices[0].message.content;
+    // 3. Request completion from Gemini
+    console.log("Sending message to Gemini API...");
+    const result = await chatSession.sendMessage(userMessage);
+    const aiResponseText = result.response.text();
     console.log("Received AI response successfully.");
 
-    // 4. Save Qwen's answer to Firestore
+    // 4. Save Gemini's answer to Firestore
     await appendChatMessage(userId, 'model', aiResponseText);
     
     return true;
   } catch (error) {
-    console.error("Qwen AI API CRITICAL Error:", error);
+    console.error("Gemini AI API CRITICAL Error:", error);
     throw error;
   }
 };

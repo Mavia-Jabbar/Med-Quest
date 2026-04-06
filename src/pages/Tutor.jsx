@@ -67,7 +67,7 @@ export default function Tutor() {
                <BrainCircuit size={20} />
             </div>
             <div>
-               <h1 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">AI Medical Tutor <Sparkles size={14} className="text-yellow-500 fill-yellow-500" /></h1>
+               <h1 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">Gemini Medical Tutor <Sparkles size={14} className="text-yellow-500 fill-yellow-500" /></h1>
                <p className="text-xs sm:text-sm font-medium text-green-500 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online and Ready</p>
             </div>
          </div>
@@ -82,7 +82,7 @@ export default function Tutor() {
                  <BrainCircuit size={36} />
               </div>
               <h2 className="text-xl sm:text-3xl font-black text-gray-900 dark:text-white mb-3 text-center">Hello, Dr. {userData?.name || 'Student'}.</h2>
-              <p className="text-sm sm:text-lg text-gray-500 font-medium text-center max-w-xl mb-6 sm:mb-12 relative z-10">I am the MedQuest Qwen Advanced Intelligence. I have memorized every medical syllabus. What concept should we break down today?</p>
+              <p className="text-sm sm:text-lg text-gray-500 font-medium text-center max-w-xl mb-6 sm:mb-12 relative z-10">I am the MedQuest Gemini Advanced Intelligence. I have memorized every medical syllabus. What concept should we break down today?</p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-3xl">
                 {['Explain Meiosis vs Mitosis', 'How do I calculate pH?', "What is Newton's 3rd Law?"].map((q, i) => (
