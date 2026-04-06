@@ -1,5 +1,5 @@
 import { db } from "@/Context/firebase";
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, deleteDoc, doc } from "firebase/firestore";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -10,8 +10,9 @@ if (apiKey) {
 
 /**
  * Converts a pure base64 PDF string (without data URL prefix) into a structured Mock Test.
+ * Saved globally to `global_mock_tests` so all students can access it.
  */
-export const convertPdfToMockTest = async (userId, base64Pdf, fileName) => {
+export const convertPdfToMockTest = async (base64Pdf, fileName) => {
   if (!genAI) throw new Error("Missing Gemini API Key");
 
   const model = genAI.getGenerativeModel({
@@ -57,18 +58,20 @@ Note that correctAnswer is the 0-based index of the right option in the options 
       throw new Error("Could not extract recognized questions from the PDF.");
     }
 
-    // Determine total length automatically
+    // Determine total length automatically matching 1 Minute = 1 Question exactly
+    const calculatedDuration = Math.max(1, parsedQuestions.length);
+
     const mockTestObj = {
       title: fileName || "Custom PDF Mock Test",
-      description: "AI-Generated Mock Test extracted from uploaded document.",
+      description: `AI-Generated Mock Test extracted from uploaded document. Contains ${parsedQuestions.length} Questions.`,
       subjectKey: "Custom",
-      durationMinutes: Math.max(10, parsedQuestions.length * 1), // 1 minute per string
+      durationMinutes: calculatedDuration,
       questions: parsedQuestions,
       createdAt: serverTimestamp()
     };
 
-    // Save to Firestore
-    const customTestsRef = collection(db, "users", userId, "custom_mocktests");
+    // Save strictly to global repository accessible by all
+    const customTestsRef = collection(db, "global_mock_tests");
     const docRef = await addDoc(customTestsRef, mockTestObj);
     
     return { ...mockTestObj, docId: docRef.id };
@@ -80,17 +83,24 @@ Note that correctAnswer is the 0-based index of the right option in the options 
 };
 
 /**
- * Fetches the user's custom PDF generated mock tests from Firestore.
+ * Fetches all globally distributed admin-generated mock tests.
  */
-export const fetchCustomMockTests = async (userId) => {
-  if (!userId) return [];
-  const testsRef = collection(db, "users", userId, "custom_mocktests");
+export const fetchCustomMockTests = async () => {
+  const testsRef = collection(db, "global_mock_tests");
   const q = query(testsRef, orderBy("createdAt", "desc"));
   
   const querySnapshot = await getDocs(q);
   const tests = [];
-  querySnapshot.forEach((doc) => {
-    tests.push({ docId: doc.id, ...doc.data() });
+  querySnapshot.forEach((docSnap) => {
+    tests.push({ docId: docSnap.id, ...docSnap.data() });
   });
   return tests;
+};
+
+/**
+ * Deletes a globally distributed mock test (Admin only usage implied on frontend).
+ */
+export const deleteCustomMockTest = async (docId) => {
+  const docRef = doc(db, "global_mock_tests", docId);
+  await deleteDoc(docRef);
 };

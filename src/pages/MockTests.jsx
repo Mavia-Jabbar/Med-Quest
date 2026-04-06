@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MOCK_TESTS as STATIC_MOCK_TESTS } from '@/data/mockTestsData';
 import { updateSubjectMastery } from '@/services/progressService';
 import { useFirebase } from '@/Context/firebase';
-import { BrainCircuit, Clock, ChevronRight, ChevronLeft, Flag, CheckCircle2, ChevronDown, Award, UploadCloud, FileText } from 'lucide-react';
+import { BrainCircuit, Clock, ChevronRight, ChevronLeft, Flag, CheckCircle2, Award, FileText } from 'lucide-react';
 import MagneticButton from '@/components/ui/MagneticButton';
 import ScienceLoader from '@/components/ui/ScienceLoader';
-import { convertPdfToMockTest, fetchCustomMockTests } from '@/services/aiMockTestService';
+import { fetchCustomMockTests } from '@/services/aiMockTestService';
 
 export default function MockTests() {
-  const { user, userData } = useFirebase();
+  const { userData } = useFirebase();
   
   // View States: 'menu' | 'active' | 'results'
   const [view, setView] = useState('menu');
@@ -17,7 +17,6 @@ export default function MockTests() {
   // Tests State
   const [allTests, setAllTests] = useState({ ...STATIC_MOCK_TESTS });
   const [isLoadingTests, setIsLoadingTests] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
   
   // Active Test States
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
@@ -27,30 +26,25 @@ export default function MockTests() {
   // Results State
   const [score, setScore] = useState({ correct: 0, total: 0, percentage: 0 });
 
-  const fileInputRef = useRef(null);
-
-  // Load Custom Tests from Firebase
+  // Load Global Custom Tests from Firebase
   useEffect(() => {
     const loadTests = async () => {
-      if (!user?.uid) {
-        setIsLoadingTests(false);
-        return;
-      }
       try {
-        const customTests = await fetchCustomMockTests(user.uid);
+        // Fetch globally distributed tests (no UID required now)
+        const customTests = await fetchCustomMockTests();
         const testsObj = { ...STATIC_MOCK_TESTS };
-        customTests.forEach((test, idx) => {
+        customTests.forEach((test) => {
            testsObj[`Custom_${test.docId}`] = test;
         });
         setAllTests(testsObj);
       } catch (err) {
-        console.error("Failed to load tests", err);
+        console.error("Failed to load global tests", err);
       } finally {
          setIsLoadingTests(false);
       }
     };
     loadTests();
-  }, [user?.uid]);
+  }, []);
 
   // TIMER LOGIC
   useEffect(() => {
@@ -104,60 +98,20 @@ export default function MockTests() {
     
     // Upload Telemetry to Firestore dynamically
     if (userData?.uid && activeTest?.subjectKey) {
-      // Don't update Mastery for deeply custom non-standard subjects unless mapped
       if (!activeTest.subjectKey.startsWith("Custom_")) {
         await updateSubjectMastery(userData.uid, activeTest.subjectKey, rawPercentage);
       }
     }
-    
     setView('results');
-  };
-
-  // UPLOAD PDF LOGIC
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !user?.uid) return;
-    
-    if (file.type !== "application/pdf") {
-      alert("Please upload a valid PDF document.");
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Data = reader.result.split(',')[1];
-        
-        try {
-          const newTest = await convertPdfToMockTest(user.uid, base64Data, file.name);
-          setAllTests(prev => ({
-             ...prev, 
-             [`Custom_${newTest.docId}`]: newTest 
-          }));
-          alert("Successfully converted PDF to Interactive Mock Test!");
-        } catch (err) {
-          alert(`Error generating test: ${err.message}`);
-        } finally {
-          setIsUploading(false);
-          // Reset input
-          if (fileInputRef.current) fileInputRef.current.value = '';
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (err) {
-      console.error(err);
-      setIsUploading(false);
-    }
   };
 
   // RENDERERS
   
   if (view === 'menu') {
-    if (isUploading) {
+    if (isLoadingTests) {
       return (
         <div className="flex-1 w-full h-full flex items-center justify-center">
-           <ScienceLoader text="Analyzing PDF & Matrixing Exam..." />
+           <ScienceLoader text="Loading Active Engine..." />
         </div>
       );
     }
@@ -165,24 +119,15 @@ export default function MockTests() {
     return (
       <div className="flex-1 w-full overflow-y-auto p-4 sm:p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-700">
         <div className="space-y-8 sm:space-y-12">
-          
-          <div className="text-center space-y-3 sm:space-y-4 relative">
+          <div className="text-center space-y-3 sm:space-y-4">
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto shadow-lg shadow-blue-500/20">
               <BrainCircuit className="w-6 h-6 sm:w-8 sm:h-8" />
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight">Assessment Engine</h1>
-            <p className="text-sm sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium mb-6">Select an MDCAT subject test, or magically convert your own paper PDFs into practical assessments.</p>
-            
-            {/* Custom File Upload Box */}
-            <div className="max-w-xl mx-auto mt-6 p-6 border-2 border-dashed border-primary/40 dark:border-primary/30 rounded-3xl bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20 transition-all cursor-pointer flex flex-col items-center justify-center" onClick={() => fileInputRef.current?.click()}>
-               <UploadCloud size={32} className="text-primary mb-3" />
-               <p className="text-gray-900 dark:text-white font-bold text-lg">Upload PDF Mock Test</p>
-               <p className="text-primary/70 dark:text-primary/60 text-sm font-medium mt-1">AI will automatically parse marked MCQs instantly.</p>
-               <input type="file" accept="application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-            </div>
+            <p className="text-sm sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium">Select an MDCAT subject test below to begin your timed assessment.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Object.keys(allTests).map((subjectKey) => {
               const test = allTests[subjectKey];
               const isBio = subjectKey === 'Biology';
@@ -192,7 +137,7 @@ export default function MockTests() {
               
               return (
                 <div key={subjectKey} className="bg-white/60 dark:bg-black/40 backdrop-blur-2xl border border-white/40 dark:border-white/10 rounded-3xl p-6 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col group cursor-pointer relative overflow-hidden" onClick={() => handleStartTest(subjectKey)}>
-                  {isCustom && <div className="absolute top-0 right-0 bg-primary text-white text-xs font-black px-3 py-1 rounded-bl-xl">CUSTOM</div>}
+                  {isCustom && <div className="absolute top-0 right-0 bg-primary/20 backdrop-blur-md text-primary text-xs font-black px-3 py-1 rounded-bl-xl border-l border-b border-primary/20">GLOBAL PUBLISHED</div>}
                   <div className={`w-12 h-12 rounded-2xl mb-6 flex items-center justify-center shadow-lg ${isBio ? 'bg-emerald-500 text-white' : isChem ? 'bg-blue-500 text-white' : isPhysics ? 'bg-fuchsia-500 text-white' : 'bg-primary text-white'} group-hover:scale-110 transition-transform`}>
                      {isCustom ? <FileText size={24} /> : <Award size={24} />}
                   </div>
@@ -233,7 +178,7 @@ export default function MockTests() {
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full">
            <div className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-10 relative">
              <div className="max-w-3xl mx-auto">
-               <h3 className="text-lg sm:text-2xl md:text-3xl font-medium leading-tight text-gray-900 dark:text-white mb-6 sm:mb-10 pb-4 sm:pb-6 border-b border-black/5 dark:border-white/5">
+               <h3 className="text-lg sm:text-2xl md:text-3xl font-medium leading-tight text-gray-900 dark:text-white mb-6 sm:mb-10 pb-4 sm:pb-6 border-b border-black/5 dark:border-white/5 whitespace-pre-wrap">
                  {q.text}
                </h3>
 
