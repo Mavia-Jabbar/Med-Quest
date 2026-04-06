@@ -80,14 +80,14 @@ export default function StudyMaterials() {
   const syllabusData   = buildSyllabusTree();
   const subjectData    = syllabusData.find(s => s.subject === activeSubject);
 
-  // Apply type filter to units → only show units that have matching materials
+  // Apply type & search filter to units → only show units that have matching materials
   const filteredUnits = (subjectData?.units || []).map(unit => ({
     ...unit,
-    materials: unit.materials.filter(m => {
-      const typeMatch = typeToCategory(m.type) === activeTypeFilter;
-      const searchMatch = m.title.toLowerCase().includes(searchQuery.toLowerCase()) || m.type.toLowerCase().includes(searchQuery.toLowerCase());
-      return typeMatch && searchMatch;
-    }),
+    materials: unit.materials.filter(m => 
+      typeToCategory(m.type) === activeTypeFilter &&
+      (m.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+       (m.description && m.description.toLowerCase().includes(searchQuery.toLowerCase())))
+    ),
   })).filter(unit => unit.materials.length > 0);
 
   // Count per type for the active subject
@@ -109,7 +109,6 @@ export default function StudyMaterials() {
   const handleSubjectChange = (subject) => {
     setActiveSubject(subject);
     setActiveTypeFilter('notes');
-    setSearchQuery('');
     setExpandedUnits([]);
   };
 
@@ -117,26 +116,13 @@ export default function StudyMaterials() {
     <div className="flex-1 w-full overflow-y-auto p-4 sm:p-6 md:p-8 relative">
 
       {/* Header */}
-      {/* Header with Search */}
-      <div className="mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
-            <BookOpen className="text-primary flex-shrink-0 h-6 w-6 sm:h-7 sm:w-7" /> Syllabus Library
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1.5 text-xs sm:text-sm font-medium">
-            Browse notes, MCQs, past papers and cheat sheets for every MDCAT topic.
-          </p>
-        </div>
-        <div className="flex items-center relative w-full md:max-w-xs group shadow-sm rounded-full">
-          <Search className="absolute left-3 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search materials..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white dark:bg-black/40 border border-gray-200 dark:border-white/10 rounded-full pl-10 pr-4 py-2.5 sm:py-2 text-sm focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 text-gray-900 dark:text-white transition-all duration-300 font-medium"
-          />
-        </div>
+      <div className="mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
+          <BookOpen className="text-primary flex-shrink-0 h-6 w-6 sm:h-7 sm:w-7" /> Syllabus Library
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1.5 text-xs sm:text-sm font-medium">
+          Browse notes, MCQs, past papers and cheat sheets for every MDCAT topic.
+        </p>
       </div>
 
       {/* Subject Tabs */}
@@ -154,6 +140,20 @@ export default function StudyMaterials() {
             {s.icon}{s.subject}
           </button>
         ))}
+      </div>
+
+      {/* Search Input */}
+      <div className="mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="relative max-w-xl">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 peer-focus:text-primary transition-colors" size={20} />
+          <input 
+            type="text" 
+            placeholder={`Search ${activeSubject} ${CONTENT_TYPES.find(c => c.value === activeTypeFilter)?.label || 'materials'}...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-white dark:bg-black/40 border border-gray-200 dark:border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-sm md:text-base focus:outline-none focus:bg-white dark:focus:bg-[#111113] focus:border-primary/50 focus:ring-4 focus:ring-primary/10 text-gray-900 dark:text-white transition-all duration-300 font-medium shadow-sm hover:shadow-md"
+          />
+        </div>
       </div>
 
       {/* Content Type Filter Tags */}
