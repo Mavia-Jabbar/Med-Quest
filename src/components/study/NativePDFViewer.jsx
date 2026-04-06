@@ -7,7 +7,7 @@ import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { askAITutor } from '@/services/aiTutorService';
 
 // Proxy wrapper strictly for Google Drive bytes bypass
-const PROXY_URL = "https://corsproxy.io/?";
+const PROXY_URL = "https://api.allorigins.win/raw?url=";
 
 const getProxiedPdfUrl = (gDriveViewUrl) => {
   const match = gDriveViewUrl.match(/\/d\/(.*?)\//);

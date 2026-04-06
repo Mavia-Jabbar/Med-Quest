@@ -9,8 +9,11 @@ import NativePDFViewer from './NativePDFViewer';
 function IframeFallback({ url, title, onClose }) {
   const embedUrl = url ? url.replace(/\/view.*/, '/preview') : '';
   return (
-    <div className="flex-1 w-full bg-gray-200 dark:bg-black/80">
+    <div className="flex-1 w-full bg-gray-200 dark:bg-black/80 relative">
       <iframe src={embedUrl} title={title} className="w-full h-full border-none" type="application/pdf" allow="autoplay" />
+      {/* Physical UI Mask to hide the Google Drive pop-out button */}
+      <div className="absolute top-0 right-0 w-[60px] h-[60px] bg-[#222222] z-50 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[60px] h-[60px] z-[60] cursor-default" onClick={(e) => e.stopPropagation()} />
     </div>
   );
 }
@@ -34,7 +37,6 @@ export default function PDFViewerEngine({ url, title, materialId, onClose }) {
           <div className="flex items-center gap-3">
              <h2 className="font-bold text-gray-900 dark:text-white truncate max-w-sm">{title}</h2>
              {!useLegacy && <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-[10px] font-black uppercase rounded">AI Canvas Active</span>}
-             {useLegacy && <span className="px-2 py-0.5 bg-red-500/20 text-red-600 dark:text-red-400 text-[10px] font-black uppercase rounded">Legacy Iframe Mode</span>}
           </div>
           <div className="flex items-center gap-3">
             {!useLegacy && (
