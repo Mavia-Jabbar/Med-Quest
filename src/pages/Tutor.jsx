@@ -7,13 +7,17 @@ import MagneticButton from '@/components/ui/MagneticButton';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-export default function Tutor() {
+export default function Tutor({ hideHeader = false, contextualPrompt = "" }) {
   const { user, userData } = useFirebase();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState(null);
   const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    if (contextualPrompt) setInput(contextualPrompt);
+  }, [contextualPrompt]);
   
   // Real-time listener for Firestore Chat History
   useEffect(() => {
@@ -61,6 +65,7 @@ export default function Tutor() {
     <div className="flex-1 w-full h-[calc(100vh-80px)] md:h-full flex flex-col bg-white dark:bg-[#09090b] relative animate-in fade-in duration-700">
       
       {/* Tutor Header */}
+      {!hideHeader && (
       <header className="h-16 shrink-0 border-b border-black/5 dark:border-white/10 px-3 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-black/50 backdrop-blur-xl z-20">
          <div className="flex items-center gap-3">
             <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-sm flex-shrink-0">
@@ -72,6 +77,7 @@ export default function Tutor() {
             </div>
          </div>
       </header>
+      )}
 
       {/* Main Chat Feed */}
       <div className="flex-1 overflow-y-auto w-full relative p-3 sm:p-6 md:p-8 space-y-4 sm:space-y-6 bg-gradient-to-br from-purple-50/30 via-transparent to-pink-50/30 dark:from-purple-950/20 dark:to-transparent">

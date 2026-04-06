@@ -4,6 +4,7 @@ import { UploadCloud, CheckCircle2, Trash2, FileText, ArrowLeft, ScrollText, Cli
 import ScienceLoader from '@/components/ui/ScienceLoader';
 import { NavLink } from 'react-router';
 import { convertPdfToMockTest, fetchCustomMockTests, deleteCustomMockTest } from '@/services/aiMockTestService';
+import { transcribePdfToMarkdown } from '@/services/aiTranscriptionService';
 
 const CATEGORIES = [
   {
@@ -79,7 +80,7 @@ export default function Admin() {
   // ==================== MATERIALS STATE ==================== 
   const { materialsList, loading: listLoading } = useMaterialsList();
   const [formData, setFormData] = useState({
-    title: '', subject: 'Biology', unitTitle: '', category: 'notes', type: 'PDF Notes', sizeStr: '', url: '',
+    title: '', subject: 'Biology', unitTitle: '', category: 'notes', type: 'PDF Notes', sizeStr: '', file: null
   });
   const [materialsLoading, setMaterialsLoading] = useState(false);
   const [materialsSuccess, setMaterialsSuccess] = useState(false);
@@ -116,17 +117,46 @@ export default function Admin() {
 
   const handleMaterialSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.file) {
+      alert("Please select a PDF document first.");
+      return;
+    }
     setMaterialsLoading(true); setMaterialsSuccess(false);
+
     try {
-      await uploadMaterial({
-        title: formData.title, subject: formData.subject,
-        unitId: formData.unitTitle.replace(/\s+/g, '-').toLowerCase(),
-        unitTitle: formData.unitTitle, type: formData.type, size: formData.sizeStr, url: formData.url,
-      });
-      setMaterialsSuccess(true);
-      setFormData(prev => ({ ...prev, title: '', url: '', sizeStr: '' }));
-    } catch { alert('Error uploading to Database'); }
-    setMaterialsLoading(false);
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Data = reader.result.split(',')[1];
+        
+        try {
+          const markdownContent = await transcribePdfToMarkdown(base64Data);
+          
+          await uploadMaterial({
+            title: formData.title, 
+            subject: formData.subject,
+            unitId: formData.unitTitle.replace(/\s+/g, '-').toLowerCase(),
+            unitTitle: formData.unitTitle, 
+            type: formData.type, 
+            size: formData.sizeStr, 
+            content: markdownContent, // Send textual DB content!
+            url: "" // Deprecate the URL field natively
+          });
+
+          setMaterialsSuccess(true);
+          setFormData(prev => ({ ...prev, title: '', sizeStr: '', file: null }));
+          if (document.getElementById('materialFileInput')) document.getElementById('materialFileInput').value = '';
+        } catch(e) {
+          console.error(e);
+          alert('Error transcribing document to Markdown: ' + e.message);
+        } finally {
+          setMaterialsLoading(false);
+        }
+      };
+      reader.readAsDataURL(formData.file);
+    } catch { 
+      alert('Error fetching file buffer.'); 
+      setMaterialsLoading(false);
+    }
   };
 
   const handleMaterialDelete = async (id, title) => {
@@ -178,7 +208,6 @@ export default function Admin() {
     }
   };
 
-
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950 font-sans">
       <div className="w-full h-full flex flex-col lg:grid lg:grid-cols-[440px_1fr] lg:h-screen lg:overflow-hidden">
@@ -213,13 +242,13 @@ export default function Admin() {
                   </div>
                   <div>
                     <h1 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Content Injector</h1>
-                    <p className="text-xs text-gray-400 font-medium mt-0.5">Deploy items to the Material Library</p>
+                    <p className="text-xs text-gray-400 font-medium mt-0.5 whitespace-nowrap">Upload PDFs to transcode into Study Spaces</p>
                   </div>
                 </div>
 
                 {materialsSuccess && (
                   <div className="p-3.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-sm font-semibold">
-                    <CheckCircle2 size={18} /> Successfully published Material!
+                    <CheckCircle2 size={18} /> Transcribed & Published Successfully!
                   </div>
                 )}
 
@@ -248,9 +277,16 @@ export default function Admin() {
                     </div>
                   </div>
                   <div><FormLabel>Format</FormLabel><div className="grid grid-cols-2 gap-2">{activeCat.types.map(t => <button key={t} type="button" onClick={() => setFormData(prev => ({ ...prev, type: t }))} className={`px-3 py-2.5 rounded-xl text-xs font-bold border-2 ${formData.type === t ? activeCat.typeActive : activeCat.typeInactive}`}>{t}</button>)}</div></div>
-                  <div><FormLabel>Google Drive Link</FormLabel><InputField required type="url" value={formData.url} onChange={e => setFormData(prev => ({ ...prev, url: e.target.value }))} /></div>
+                  
+                  <div>
+                    <FormLabel>Upload Raw Document</FormLabel>
+                    <div className="flex bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden p-1.5">
+                       <input id="materialFileInput" type="file" accept="application/pdf" className="text-sm font-medium ml-2 w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" onChange={e => setFormData(prev => ({ ...prev, file: e.target.files[0] }))} />
+                    </div>
+                  </div>
+
                   <button type="submit" disabled={materialsLoading} className="w-full py-3.5 mt-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-black text-sm hover:scale-[1.01] shadow-lg disabled:opacity-50 inline-flex justify-center items-center gap-2">
-                    {materialsLoading ? <ScienceLoader text="Deploying..." /> : '🚀 Publish Material'}
+                    {materialsLoading ? <ScienceLoader text="Transcribing via AI..." /> : '🚀 Transcribe & Publish Study Space'}
                   </button>
                 </form>
               </div>
@@ -294,7 +330,7 @@ export default function Admin() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Active Materials</h2>
-                  <p className="text-gray-400 mt-1 text-sm font-medium">All documents currently served globally.</p>
+                  <p className="text-gray-400 mt-1 text-sm font-medium">All transcribed Study Spaces served globally.</p>
                 </div>
                 <span className="px-3 py-1.5 bg-white dark:bg-white/5 rounded-full border border-gray-200 dark:border-white/10 text-sm font-bold text-gray-600 shadow-sm">{materialsList.length} items</span>
               </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BookOpen, FileText, ChevronRight, FolderOpen, Dna, Atom, Magnet, Info, ClipboardList, FileQuestion, ScrollText } from 'lucide-react';
 import ScienceLoader from '@/components/ui/ScienceLoader';
 import MagneticButton from '@/components/ui/MagneticButton';
-import PDFViewerEngine from '@/components/study/PDFViewerEngine';
+import StudySpaceViewer from '@/components/study/StudySpaceViewer';
 import { useFirebase } from '@/Context/firebase';
 import { trackSubjectProgress } from '@/services/progressService';
 import { useMaterialsList } from '@/services/materialService';
@@ -233,11 +233,11 @@ export default function StudyMaterials() {
         </div>
       )}
 
-      {/* PDF Viewer */}
+      {/* Study Space App */}
       {activePdf && (
-        <PDFViewerEngine
-          url={activePdf.url}
-          title={activePdf.title}
+        <StudySpaceViewer
+          material={activePdf}
+          user={user}
           onClose={() => setActivePdf(null)}
         />
       )}
