@@ -132,13 +132,13 @@ export default function MockTests() {
                <p className="text-gray-500 font-medium">Please wait for the platform Administrators to deploy a PDF test matrix.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {Object.keys(allTests).map((subjectKey) => {
                 const test = allTests[subjectKey];
                 
                 return (
-                  <div key={subjectKey} className="bg-white/60 dark:bg-black/40 backdrop-blur-2xl border border-white/40 dark:border-white/10 rounded-3xl p-6 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col group cursor-pointer relative overflow-hidden" onClick={() => handleStartTest(subjectKey)}>
-                    <div className="absolute top-0 right-0 bg-primary/20 backdrop-blur-md text-primary text-xs font-black px-3 py-1 rounded-bl-xl border-l border-b border-primary/20">GLOBAL PUBLISHED</div>
+                  <div key={subjectKey} className="bg-white/60 dark:bg-black/40 backdrop-blur-2xl border border-white/40 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col group cursor-pointer relative overflow-hidden" onClick={() => handleStartTest(subjectKey)}>
+                    <div className="absolute top-0 right-0 bg-primary/20 backdrop-blur-md text-primary text-[10px] sm:text-xs font-black px-3 py-1.5 rounded-bl-2xl border-l border-b border-primary/20">GLOBAL PUBLISHED</div>
                     <div className="w-12 h-12 rounded-2xl mb-6 flex items-center justify-center shadow-lg bg-primary text-white group-hover:scale-110 transition-transform">
                        <FileText size={24} />
                     </div>
@@ -165,7 +165,7 @@ export default function MockTests() {
 
     return (
       <div className="flex-1 w-full flex flex-col h-full bg-white dark:bg-[#09090b] animate-in slide-in-from-bottom-8 duration-700">
-        <header className="min-h-14 border-b border-gray-200 dark:border-white/10 px-3 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 bg-gray-50 dark:bg-black/50 backdrop-blur-md z-10 w-full gap-2 py-3 sm:py-0">
+        <header className="min-h-14 lg:min-h-16 border-b border-gray-200 dark:border-white/10 px-4 sm:px-6 flex items-center justify-between shrink-0 bg-gray-50 dark:bg-black/50 backdrop-blur-md z-10 w-full py-3 lg:py-0">
            <div>
              <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">{activeTest.title}</h2>
              <p className="text-xs sm:text-sm font-semibold text-gray-500 tracking-wide uppercase">Question {currentQuestionIdx + 1} of {activeTest.questions.length}</p>
@@ -177,30 +177,30 @@ export default function MockTests() {
            </div>
         </header>
 
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full">
-           <div className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-10 relative">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full relative">
+           <div className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-10 pb-32 lg:pb-10 relative">
              <div className="max-w-3xl mx-auto">
                <h3 className="text-lg sm:text-2xl md:text-3xl font-medium leading-tight text-gray-900 dark:text-white mb-6 sm:mb-10 pb-4 sm:pb-6 border-b border-black/5 dark:border-white/5 whitespace-pre-wrap">
                  {q.text}
                </h3>
 
-               <div className="space-y-3">
+               <div className="space-y-4">
                  {q.options.map((optionText, idx) => {
                    const isSelected = answers[currentQuestionIdx] === idx;
                    return (
                      <button 
                        key={idx}
                        onClick={() => handleSelectAnswer(idx)}
-                       className={`w-full text-left p-3 sm:p-5 rounded-2xl border-2 transition-all duration-300 flex items-center gap-3 sm:gap-5 ${
+                       className={`w-full text-left p-4 sm:p-5 md:p-6 rounded-2xl sm:rounded-3xl border-2 transition-all duration-300 flex items-center gap-4 sm:gap-5 ${
                          isSelected 
                           ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(79,70,229,0.15)] scale-[1.01]' 
-                          : 'border-transparent bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 hover:border-black/5 dark:hover:border-white/10'
+                          : 'border-transparent bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 hover:border-black/5 dark:hover:border-white/10 mb-2 sm:mb-0'
                        }`}
                      >
-                       <div className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-colors ${isSelected ? 'bg-primary text-white' : 'bg-white dark:bg-black text-gray-500 shadow-sm border border-black/5 dark:border-white/10'}`}>
+                       <div className={`w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-full flex items-center justify-center font-bold text-sm sm:text-base transition-colors ${isSelected ? 'bg-primary text-white shadow-md' : 'bg-white dark:bg-black text-gray-500 shadow-sm border border-black/5 dark:border-white/10'}`}>
                          {String.fromCharCode(65 + idx)}
                        </div>
-                       <span className={`text-sm sm:text-base font-medium ${isSelected ? 'text-gray-900 dark:text-white' : ''}`}>{optionText}</span>
+                       <span className={`text-base sm:text-lg font-medium leading-relaxed ${isSelected ? 'text-gray-900 dark:text-white' : ''}`}>{optionText}</span>
                      </button>
                    );
                  })}
@@ -208,9 +208,33 @@ export default function MockTests() {
              </div>
            </div>
 
-           <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/50 p-6 flex flex-col justify-between shrink-0">
-             <div>
-               <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Exam Navigation</h4>
+           {/* Mobile Floating Actions */}
+           <div className="lg:hidden absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-[#09090b]/90 backdrop-blur-xl border-t border-gray-200 dark:border-white/10 p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-20 flex gap-3">
+             <button 
+               disabled={currentQuestionIdx === 0}
+               onClick={() => setCurrentQuestionIdx(prev => prev - 1)}
+               className="flex-1 h-14 bg-gray-100 dark:bg-white/10 rounded-2xl font-bold text-gray-700 dark:text-gray-200 disabled:opacity-30 flex items-center justify-center"
+             >
+               <ChevronLeft size={20} />
+             </button>
+             <button 
+               disabled={currentQuestionIdx === activeTest.questions.length - 1}
+               onClick={() => setCurrentQuestionIdx(prev => prev + 1)}
+               className="flex-[2] h-14 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 disabled:opacity-30 disabled:hidden"
+             >
+               Next Question <ChevronRight size={20} />
+             </button>
+             {currentQuestionIdx === activeTest.questions.length - 1 && (
+               <button onClick={handleCompleteTest} className="flex-[2] h-14 bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-500/30 flex items-center justify-center">
+                 SUBMIT
+               </button>
+             )}
+           </div>
+
+           {/* Desktop Sidebar Navigation */}
+           <div className="hidden lg:flex w-80 border-l border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/50 p-6 flex-col justify-between shrink-0 h-full">
+             <div className="overflow-y-auto max-h-[60vh] pr-2">
+               <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 sticky top-0 bg-gray-50 dark:bg-[#111113] py-2 z-10">Exam Navigation</h4>
                <div className="grid grid-cols-5 gap-3">
                  {activeTest.questions.map((_, i) => (
                    <button 
@@ -228,7 +252,7 @@ export default function MockTests() {
                </div>
              </div>
 
-             <div className="mt-10 space-y-4">
+             <div className="mt-8 space-y-4 pt-4 border-t border-gray-200 dark:border-white/10">
                <div className="flex gap-4">
                  <button 
                    disabled={currentQuestionIdx === 0}

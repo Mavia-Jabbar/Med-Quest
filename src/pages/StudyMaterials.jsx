@@ -204,22 +204,22 @@ export default function StudyMaterials() {
                 </button>
 
                 {/* Accordion Content */}
-                <div className={`grid transition-all duration-500 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 pb-4 px-4 border-t border-white/20 dark:border-white/5 pt-4' : 'grid-rows-[0fr] opacity-0 py-0 px-4'}`}>
+                <div className={`grid transition-all duration-500 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 pb-6 px-4 sm:px-6 border-t border-white/20 dark:border-white/5 pt-6' : 'grid-rows-[0fr] opacity-0 py-0 px-4 sm:px-6'}`}>
                   <div className="overflow-hidden">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                       {unit.materials.map((mat, idx) => (
-                        <div key={idx} className="flex flex-col p-4 rounded-2xl bg-white/70 dark:bg-black/50 border border-white/40 dark:border-white/5 shadow-sm hover:shadow-lg transition-all hover:-translate-y-0.5">
-                          <div className="flex justify-between items-start mb-3">
-                            <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg ${badgeStyle(mat.type)}`}>
+                        <div key={idx} className="flex flex-col p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-black/50 border border-white/40 dark:border-white/5 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1">
+                          <div className="flex justify-between items-start mb-4">
+                            <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg ${badgeStyle(mat.type)}`}>
                               {mat.type}
                             </span>
-                            <FileText className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
+                            <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300 dark:text-gray-600 flex-shrink-0" />
                           </div>
-                          <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-1 leading-snug flex-1">{mat.title}</h4>
-                          {mat.size && <span className="text-xs text-gray-400 font-medium mb-3">{mat.size}</span>}
+                          <h4 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base mb-2 leading-snug flex-1">{mat.title}</h4>
+                          {mat.size && <span className="text-xs sm:text-sm text-gray-400 font-medium mb-4">{mat.size}</span>}
                           <MagneticButton
                             onClick={() => handleOpenViewer(mat)}
-                            className="w-full mt-auto bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md rounded-xl font-bold py-2 text-sm"
+                            className="w-full mt-auto bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg rounded-xl sm:rounded-2xl font-bold py-2.5 sm:py-3 text-sm sm:text-base"
                           >
                             Open Viewer
                           </MagneticButton>
