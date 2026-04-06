@@ -1,7 +1,7 @@
 import React from 'react';
 import { useFirebase } from '@/Context/firebase';
 import { Bell, Menu, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 export default function DashboardHeader({ toggleMenu }) {
   const { userData } = useFirebase();
