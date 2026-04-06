@@ -7,9 +7,10 @@ import NativePDFViewer from './NativePDFViewer';
 
 // Fallback to Iframe if native load fails or if the URL can't be parsed
 function IframeFallback({ url, title, onClose }) {
+  const embedUrl = url ? url.replace(/\/view.*/, '/preview') : '';
   return (
     <div className="flex-1 w-full bg-gray-200 dark:bg-black/80">
-      <iframe src={`${url}#view=FitH`} title={title} className="w-full h-full border-none" type="application/pdf" />
+      <iframe src={embedUrl} title={title} className="w-full h-full border-none" type="application/pdf" allow="autoplay" />
     </div>
   );
 }
