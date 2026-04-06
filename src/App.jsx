@@ -15,6 +15,7 @@ import Flashcards from "./pages/Flashcards";
 import MockTests from "./pages/MockTests";
 import Tutor from "./pages/Tutor";
 import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
 import AdminRoute from "@/components/AdminRoute";
 import { useFirebase } from "@/Context/firebase";
 
@@ -23,7 +24,7 @@ function App() {
   const { isLoggedIn } = useFirebase();
   
   // Convert current path and target paths to lowercase to catch cases like /admin or /Admin across Vercel deployments
-  const hideNavbarRoutes = ["/dashboard", "/materials", "/flashcards", "/mocktests", "/tutor", "/admin"];
+  const hideNavbarRoutes = ["/dashboard", "/materials", "/flashcards", "/mocktests", "/tutor", "/admin", "/profile"];
   const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname.toLowerCase());
 
   return (
@@ -77,6 +78,7 @@ function App() {
             <Route path="/Flashcards" element={<Flashcards />} />
             <Route path="/MockTests" element={<MockTests />} />
             <Route path="/Tutor" element={<Tutor />} />
+            <Route path="/Profile" element={<Profile />} />
           </Route>
 
         </Route>
